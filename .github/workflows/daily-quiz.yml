@@ -28,6 +28,5 @@ jobs:
       - run: npm i --no-save @supabase/supabase-js web-push
       - run: node scripts/daily-quiz.mjs
         env:
-          VAPID_PUBLIC: ${{ secrets.VAPID_PUBLIC }}
           VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
           FORCE: ${{ (github.event_name == 'workflow_dispatch' && inputs.force) && '1' || '0' }}

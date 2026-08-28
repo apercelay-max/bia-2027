@@ -4,7 +4,8 @@
  * et envoie une notification push qui ouvre le quiz du jour.
  *
  * Lancé par .github/workflows/daily-quiz.yml. Rien à builder côté app.
- * Secrets attendus : VAPID_PUBLIC, VAPID_PRIVATE. (Clé Supabase publiable = OK en clair.)
+ * Seul secret attendu : VAPID_PRIVATE. (La clé publique et la clé Supabase
+ * publiable sont déjà exposées dans index.html — pas des secrets.)
  */
 import { createClient } from '@supabase/supabase-js';
 import webpush from 'web-push';
@@ -12,11 +13,12 @@ import webpush from 'web-push';
 const SUPABASE_URL = 'https://elyspjsyconovzczmzhm.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_jpQmyTu3lkT65xw0Z6oXmg_7zxkqRXW';
 const TABLE = 'bia_2027_state';
-const VAPID_PUBLIC = process.env.VAPID_PUBLIC;
+// même clé publique que dans index.html (VAPID_PUBLIC) — publique par nature
+const VAPID_PUBLIC = 'BC791P1FqS-u4pPpbqvGyGswlPxHW7S4A8-ZwMFUQF2CLynoOv9934TRHboysRXmpmDmHMTKnfm6_9YlNXWbnaQ';
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE;
 const FORCE = process.env.FORCE === '1';
 
-if (!VAPID_PUBLIC || !VAPID_PRIVATE) { console.error('VAPID_PUBLIC / VAPID_PRIVATE manquants'); process.exit(1); }
+if (!VAPID_PRIVATE) { console.error('Secret VAPID_PRIVATE manquant'); process.exit(1); }
 webpush.setVapidDetails('https://bia-2027.vercel.app', VAPID_PUBLIC, VAPID_PRIVATE);
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
