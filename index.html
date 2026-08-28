@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="fr" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e131c">
+<title>BIA 2027 — planning de révision</title>
+<style>
+  :root{
+    --bg:#eef1f6; --surface:#ffffff; --surface-2:#f6f8fb;
+    --text:#161c27; --muted:#5c6675; --faint:#8a94a3;
+    --border:#e2e7ee; --border-strong:#d3d9e2;
+    --accent:#2f6df0; --accent-ink:#ffffff; --accent-soft:#e7effe;
+    --good:#128a5b; --good-soft:#dcf3e9;
+    --warn:#c9781a; --warn-soft:#fbeede;
+    --shadow:0 1px 2px rgba(19,28,45,.06),0 8px 24px rgba(19,28,45,.07);
+    --radius:16px;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --bg:#0e131c; --surface:#161d29; --surface-2:#1c2533;
+    --text:#eaeef5; --muted:#9aa5b4; --faint:#6f7b8c;
+    --border:#26303f; --border-strong:#313d4f;
+    --accent:#5b93ff; --accent-ink:#0b1220; --accent-soft:#1b2742;
+    --good:#3ecf8e; --good-soft:#123528;
+    --warn:#e0a458; --warn-soft:#3a2c17;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  }
+  @media (prefers-color-scheme:dark){
+    :root[data-theme="auto"]{
+      --bg:#0e131c; --surface:#161d29; --surface-2:#1c2533;
+      --text:#eaeef5; --muted:#9aa5b4; --faint:#6f7b8c;
+      --border:#26303f; --border-strong:#313d4f;
+      --accent:#5b93ff; --accent-ink:#0b1220; --accent-soft:#1b2742;
+      --good:#3ecf8e; --good-soft:#123528;
+      --warn:#e0a458; --warn-soft:#3a2c17;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:var(--font);background:var(--bg);color:var(--text);
+    line-height:1.5;-webkit-font-smoothing:antialiased;
+    padding-bottom:64px;
+  }
+  a{color:var(--accent)}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:color-mix(in srgb,var(--surface) 82%,transparent);
+    -webkit-backdrop-filter:saturate(180%) blur(16px);
+    backdrop-filter:saturate(180%) blur(16px);
+    border-bottom:1px solid var(--border);
+  }
+  .topbar-inner{
+    max-width:760px;margin:0 auto;padding:12px 18px;
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+  }
+  .brand{font-weight:700;font-size:1.02rem;letter-spacing:.2px;display:flex;align-items:center;gap:8px}
+  .brand small{font-weight:500;color:var(--muted);font-size:.8rem}
+  .icon-btn{
+    border:1px solid var(--border-strong);background:var(--surface);color:var(--text);
+    width:38px;height:38px;border-radius:11px;font-size:1rem;cursor:pointer;
+    display:grid;place-items:center;transition:transform .12s ease,background .2s ease;
+  }
+  .icon-btn:active{transform:scale(.92)}
+
+  .dash{max-width:760px;margin:0 auto;padding:4px 18px 16px}
+  .countdown{
+    display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+    margin-bottom:14px;
+  }
+  .countdown b{font-size:1.5rem;font-weight:750;letter-spacing:.3px}
+  .countdown span{color:var(--muted);font-size:.86rem}
+  .meters{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  @media (max-width:520px){.meters{grid-template-columns:1fr}}
+  .meter{
+    background:var(--surface);border:1px solid var(--border);border-radius:13px;
+    padding:10px 12px;box-shadow:var(--shadow);
+  }
+  .meter .lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.6px;color:var(--faint);font-weight:650}
+  .meter .val{font-size:.96rem;font-weight:700;margin:3px 0 7px;display:flex;justify-content:space-between;align-items:baseline}
+  .meter .val em{font-style:normal;color:var(--muted);font-weight:600;font-size:.8rem}
+  .track{height:7px;border-radius:99px;background:var(--surface-2);overflow:hidden;border:1px solid var(--border)}
+  .fill{height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .5s cubic-bezier(.2,.7,.2,1)}
+  .meter.done .fill{background:var(--good)}
+
+  /* ---------- layout ---------- */
+  main{max-width:760px;margin:0 auto;padding:20px 18px 40px}
+  .phase{margin-bottom:34px}
+  .phase-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:6px}
+  .phase-num{
+    flex:none;width:30px;height:30px;border-radius:9px;background:var(--accent);color:var(--accent-ink);
+    font-weight:750;display:grid;place-items:center;font-size:.92rem;margin-top:2px;
+  }
+  .phase-head h2{font-size:1.16rem;font-weight:730;letter-spacing:.2px}
+  .phase-head p{color:var(--muted);font-size:.85rem;margin-top:1px}
+
+  .card{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden;margin-top:12px;
+  }
+  .chap-head{
+    display:flex;flex-direction:column;gap:8px;padding:13px 15px;cursor:pointer;
+    user-select:none;-webkit-user-select:none;
+  }
+  .chap-head-top{display:flex;align-items:center;gap:10px}
+  .chap-head .cnum{
+    flex:none;font-size:.72rem;font-weight:750;color:var(--accent);
+    background:var(--accent-soft);border-radius:7px;padding:3px 7px;letter-spacing:.4px;
+  }
+  .chap-head .ctitle{flex:1;font-weight:670;font-size:.94rem;line-height:1.34}
+  .chap-head .chev{color:var(--faint);transition:transform .2s ease;flex:none;font-size:1.15rem;line-height:1}
+  .chap-head-meta{display:flex;align-items:center;gap:8px}
+  .chap-head .cmonth{font-size:.74rem;color:var(--faint);font-weight:600}
+  .chap-head .cprog{
+    margin-left:auto;font-size:.76rem;color:var(--muted);font-weight:700;
+    font-variant-numeric:tabular-nums;background:var(--surface-2);
+    border:1px solid var(--border);padding:2px 9px;border-radius:99px;
+  }
+  .card.open .chev{transform:rotate(90deg)}
+  .chap-body{display:none;border-top:1px solid var(--border);padding:6px 4px 8px}
+  .card.open .chap-body{display:block}
+
+  .part-label{
+    font-size:.74rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+    color:var(--faint);padding:12px 14px 5px;
+  }
+
+  .row{
+    display:flex;align-items:center;gap:12px;padding:9px 14px;border-radius:10px;
+    transition:background .15s ease;
+  }
+  .row:hover{background:var(--surface-2)}
+  .check{
+    flex:none;width:22px;height:22px;border-radius:7px;border:2px solid var(--border-strong);
+    background:var(--surface);cursor:pointer;display:grid;place-items:center;
+    transition:background .15s ease,border-color .15s ease,transform .1s ease;
+  }
+  .check:active{transform:scale(.85)}
+  .check svg{width:13px;height:13px;stroke:var(--accent-ink);stroke-width:3.5;fill:none;
+    stroke-linecap:round;stroke-linejoin:round;opacity:0;transform:scale(.4);
+    transition:opacity .15s ease,transform .15s ease}
+  .row.checked .check{background:var(--good);border-color:var(--good)}
+  .row.checked .check svg{opacity:1;transform:scale(1)}
+  .row .txt{flex:1;font-size:.9rem}
+  .row.checked .txt{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--border-strong)}
+  .row .snum{color:var(--faint);font-size:.78rem;font-weight:650;font-variant-numeric:tabular-nums;flex:none;width:1.4em;text-align:right}
+  .flag{
+    flex:none;border:0;background:transparent;cursor:pointer;font-size:1rem;
+    color:var(--faint);opacity:.5;padding:4px;line-height:1;
+    transition:opacity .15s ease,transform .1s ease,color .15s ease;
+  }
+  .flag:active{transform:scale(.8)}
+  .flag.on{opacity:1;color:var(--warn)}
+
+  /* task rows (phase 2 & 3) */
+  .task{
+    display:flex;align-items:center;gap:12px;padding:11px 15px;border-top:1px solid var(--border);
+  }
+  .task:first-child{border-top:0}
+  .task .tmain{flex:1}
+  .task .tt{font-weight:640;font-size:.92rem}
+  .task .td{color:var(--muted);font-size:.78rem;margin-top:1px}
+  .subchecks{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;font-size:.76rem;font-weight:650;
+    padding:5px 10px;border-radius:99px;border:1px solid var(--border-strong);
+    background:var(--surface);color:var(--muted);cursor:pointer;user-select:none;-webkit-user-select:none;
+    transition:all .15s ease;
+  }
+  .chip:active{transform:scale(.94)}
+  .chip.on{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+  .score-in{
+    width:74px;font-family:var(--font);font-size:.82rem;font-weight:650;
+    border:1px solid var(--border-strong);border-radius:9px;padding:6px 8px;
+    background:var(--surface);color:var(--text);
+  }
+  .score-in::placeholder{color:var(--faint);font-weight:500}
+
+  /* weak-points panel */
+  .weakbox{
+    margin-top:12px;background:var(--warn-soft);border:1px solid var(--warn);
+    border-radius:13px;padding:12px 14px;
+  }
+  .weakbox h3{font-size:.82rem;text-transform:uppercase;letter-spacing:.6px;color:var(--warn);margin-bottom:6px}
+  .weakbox ul{list-style:none;display:flex;flex-direction:column;gap:4px}
+  .weakbox li{font-size:.86rem;display:flex;gap:8px}
+  .weakbox li::before{content:"★";color:var(--warn);flex:none}
+  .weakbox .empty{font-size:.84rem;color:var(--muted)}
+
+  details.method{margin-top:14px;background:var(--surface);border:1px solid var(--border);border-radius:13px;box-shadow:var(--shadow)}
+  details.method summary{padding:13px 15px;font-weight:670;font-size:.92rem;cursor:pointer;list-style:none}
+  details.method summary::-webkit-details-marker{display:none}
+  details.method summary::before{content:"▸ ";color:var(--faint)}
+  details.method[open] summary::before{content:"▾ "}
+  details.method .m-body{padding:0 15px 15px;font-size:.88rem;color:var(--muted)}
+  details.method .m-body p{margin-top:9px}
+  details.method .m-body strong{color:var(--text)}
+
+  footer{max-width:760px;margin:0 auto;padding:8px 18px 30px;color:var(--faint);font-size:.78rem;text-align:center}
+  footer button{
+    margin-top:10px;border:1px solid var(--border-strong);background:var(--surface);color:var(--muted);
+    font-size:.78rem;padding:7px 14px;border-radius:9px;cursor:pointer;font-family:var(--font);
+  }
+  footer button:active{transform:scale(.96)}
+  .src{margin-top:6px}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">✈️ BIA 2027 <small>planning de révision</small></div>
+    <button class="icon-btn" id="themeBtn" title="Thème" aria-label="Changer de thème">🌓</button>
+  </div>
+  <div class="dash">
+    <div class="countdown"><b id="cd">J–…</b><span id="cdsub">examen ≈ 19 mai 2027 · prêt visé le 10 mai</span></div>
+    <div class="meters">
+      <div class="meter" id="m1">
+        <div class="lbl">Phase 1 · Lecture 1</div>
+        <div class="val"><span id="m1pct">0 %</span><em id="m1cnt">0 / 65</em></div>
+        <div class="track"><div class="fill" id="m1fill"></div></div>
+      </div>
+      <div class="meter" id="m2">
+        <div class="lbl">Phase 2 · Lecture 2</div>
+        <div class="val"><span id="m2pct">0 %</span><em id="m2cnt">0 / 16</em></div>
+        <div class="track"><div class="fill" id="m2fill"></div></div>
+      </div>
+      <div class="meter" id="m3">
+        <div class="lbl">Phase 3 · Annales</div>
+        <div class="val"><span id="m3pct">0 %</span><em id="m3cnt">0 / 6</em></div>
+        <div class="track"><div class="fill" id="m3fill"></div></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- PHASE 1 -->
+  <section class="phase">
+    <div class="phase-head">
+      <div class="phase-num">1</div>
+      <div>
+        <h2>Lecture 1 — comprendre</h2>
+        <p>Septembre 2026 → 10 février 2027. Tu lis tout une fois, 1 mini-fiche (3–5 lignes) par section. Rythme : 4 sections/semaine (une par jour, lundi→jeudi ; vendredi = relire les fiches de la semaine). Touche l’étoile ★ sur une section où tu galères.</p>
+      </div>
+    </div>
+    <div id="chapters"></div>
+    <div class="weakbox" id="weakbox">
+      <h3>Mes points faibles (★)</h3>
+      <ul id="weaklist"></ul>
+    </div>
+  </section>
+
+  <!-- PHASE 2 -->
+  <section class="phase">
+    <div class="phase-head">
+      <div class="phase-num">2</div>
+      <div>
+        <h2>Lecture 2 — mémoriser</h2>
+        <p>16 février → 12 avril 2027. Relecture rapide + vraies fiches + QCM à la fin de chaque chapitre. 30 min = 15 min relecture + 15 min fiche/QCM. Fiches recto-verso ou Anki.</p>
+      </div>
+    </div>
+    <div class="card" id="phase2"></div>
+  </section>
+
+  <!-- PHASE 3 -->
+  <section class="phase">
+    <div class="phase-head">
+      <div class="phase-num">3</div>
+      <div>
+        <h2>Annales — s’entraîner</h2>
+        <p>13 avril → jour J. 1 sujet complet par semaine, chronométré (2 h 30, 100 QCM), puis correction question par question. Le reste : fiches + questions ratées uniquement.</p>
+      </div>
+    </div>
+    <div class="card" id="phase3"></div>
+    <details class="method">
+      <summary>Méthode & rappels</summary>
+      <div class="m-body">
+        <p><strong>Chaque jour :</strong> 30 min = 20 min de lecture + 10 min de trace écrite. Pas de trace écrite = ça ne compte pas.</p>
+        <p><strong>Points faibles :</strong> chaque section marquée ★ passe en priorité en phase 2 et 3.</p>
+        <p><strong>Météo (chapitre 3) :</strong> le plus dense et le plus piégeux — c’est normal d’y passer 2 semaines en phase 2.</p>
+        <p><strong>Anglais :</strong> épreuve facultative = uniquement des points en plus, aucune pénalité. 2 × 20 min de vocabulaire par semaine à partir d’avril.</p>
+        <p><strong>Vacances</strong> (Toussaint, Noël, hiver) : tu souffles ou tu prends de l’avance — c’est ton matelas si une semaine saute.</p>
+        <p><strong>3 derniers jours :</strong> relecture des fiches seulement, zéro nouveau contenu, et tu dors.</p>
+        <p><strong>Date exacte :</strong> l’examen est un mercredi après-midi de mai (le 20 mai en 2026). La date officielle 2027 sort vers décembre 2026 au Bulletin officiel.</p>
+      </div>
+    </details>
+  </section>
+
+</main>
+
+<footer>
+  Progression enregistrée sur cet appareil (localStorage). Manuel officiel BIA — eduscol.
+  <div class="src"><a href="https://sti.eduscol.education.fr/bia/manuel_bia_2019/Chapitre_1" target="_blank" rel="noopener">Manuel BIA en ligne</a></div>
+  <button id="resetBtn">Tout remettre à zéro</button>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var KEY = "bia-2027-v1";
+  var EXAM = new Date("2027-05-19T14:00:00");
+
+  /* ---------------- data ---------------- */
+  var PLAN = [
+    { n:"Chapitre 1", title:"Aérodynamique, aérostatique et principes du vol", month:"Septembre 2026", parts:[
+      { p:"Partie 1 · Aérodynamique", items:["Comment vole un avion ?","Étude de la polaire","Caractéristiques d’une voilure"] },
+      { p:"Partie 2 · Étude du vol stabilisé", items:["Les forces en jeu","Tangage, roulis et lacet","Facteur de charge","Décollage et atterrissage"] },
+      { p:"Partie 3 · Aérostation et vol spatial", items:["Aérostation","Vol spatial"] }
+    ]},
+    { n:"Chapitre 2", title:"Étude des aéronefs et des engins spatiaux", month:"Septembre – Octobre 2026", parts:[
+      { p:"Partie 1 · La classification des aéronefs", items:["Les familles d’aéronefs","Composition d’un avion","Les véhicules aérospatiaux"] },
+      { p:"Partie 2 · Les cellules", items:["La structure d’une cellule","La voilure","Empennages et gouvernes","Le train d’atterrissage"] },
+      { p:"Partie 3 · Les groupes motopropulseurs (GMP)", items:["L’hélice","Les moteurs à pistons","Les turboréacteurs","Les autres turbomachines"] },
+      { p:"Partie 4 · Les instruments de bord", items:["Les instruments barométriques","Les instruments gyroscopiques","Les autres instruments"] }
+    ]},
+    { n:"Chapitre 3", title:"Météorologie et aérologie", month:"Octobre – Décembre 2026", parts:[
+      { p:"Partie 1 · Température, pression et vent", items:["L’atmosphère","La température et les échanges thermiques","La pression et le vent","Les perturbations et les fronts"] },
+      { p:"Partie 2 · Nuages et précipitations", items:["L’eau dans l’atmosphère","Formation des nuages","Classification des nuages","Les précipitations"] },
+      { p:"Partie 3 · Les phénomènes dangereux pour l’aéronautique", items:["Brume et brouillard","Givrage","Les cumulonimbus","Les phénomènes météorologiques locaux"] },
+      { p:"Partie 4 · L’information météorologique", items:["Cartes","Messages","Le dossier météo"] }
+    ]},
+    { n:"Chapitre 4", title:"Navigation, réglementation, sécurité des vols", month:"Décembre 2026 – Janvier 2027", parts:[
+      { p:"Partie 1 · Réglementation et sécurité", items:["Organismes chargés de la réglementation","Licences et brevets","Certification, équipement et entretien des aéronefs","Facteurs humains et accidents"] },
+      { p:"Partie 2 · Circulation aérienne", items:["Les zones aéronautiques","L’aérodrome","Règles de vol"] },
+      { p:"Partie 3 · Principes et outils de la navigation", items:["La mesure du temps","Se repérer sur la Terre","Déclinaison et dérive","Méthodes de navigation"] },
+      { p:"Partie 4 · Préparer son vol", items:["Préparation de la navigation","Avant le départ"] }
+    ]},
+    { n:"Chapitre 5", title:"Histoire et culture de l’aéronautique et du spatial", month:"Janvier – 10 février 2027", parts:[
+      { p:"Partie 1 · Les débuts", items:["Du mythe à la réalité","Les aérostats","Les pionniers de l’aviation (1856-1907)","Les premiers records (1908-1913)"] },
+      { p:"Partie 2 · D’une guerre à l’autre", items:["La Première Guerre mondiale (1914-1918)","L’entre-deux-guerres (1919-1939)","La Seconde Guerre mondiale (1939-1945)"] },
+      { p:"Partie 3 · De 1945 à nos jours", items:["Le « mur » du son","L’aviation militaire","L’aviation commerciale","Les hélicoptères et les avions expérimentaux"] },
+      { p:"Partie 4 · La conquête de l’espace", items:["Les précurseurs","De Spoutnik à Apollo","De Skylab à l’ISS"] }
+    ]}
+  ];
+
+  var PHASE2 = [
+    { t:"Chapitre 1 — Aérodynamique", d:"semaine du 16 février 2027" },
+    { t:"Chapitre 2 — Aéronefs", d:"semaine du 23 février 2027" },
+    { t:"Chapitre 3 — Météo", d:"2 – 15 mars 2027 (2 semaines, le plus dense)" },
+    { t:"Chapitre 4 — Navigation / Réglementation", d:"semaine du 16 mars 2027" },
+    { t:"Chapitre 5 — Histoire", d:"semaine du 23 mars 2027" },
+    { t:"Reprise des QCM ratés + fiches des points faibles", d:"30 mars – 12 avril 2027", single:true }
+  ];
+  var P2SUB = ["Relu","Fiches","QCM"];
+
+  var PHASE3 = [
+    { t:"Annale blanche nº 1", d:"semaine du 13 avril 2027", score:true },
+    { t:"Annale blanche nº 2", d:"semaine du 20 avril 2027", score:true },
+    { t:"Annale blanche nº 3", d:"semaine du 27 avril 2027", score:true },
+    { t:"Annale blanche nº 4", d:"semaine du 4 mai 2027", score:true },
+    { t:"Anglais — vocabulaire révisé 2×/semaine", d:"avril – mai 2027" },
+    { t:"Relecture finale des fiches (3 derniers jours, rien de neuf)", d:"15 – 18 mai 2027" }
+  ];
+
+  /* ---------------- state ---------------- */
+  var state = load();
+  function load(){
+    try{ var s = JSON.parse(localStorage.getItem(KEY)); if(s && typeof s==="object") return s; }catch(e){}
+    return { sec:{}, weak:{}, p2:{}, p3:{}, score:{}, open:{}, theme:"auto" };
+  }
+  var saveT;
+  function save(){ clearTimeout(saveT); saveT=setTimeout(function(){
+    try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+  },150); }
+
+  /* ---------------- helpers ---------------- */
+  function el(tag, cls, html){ var e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e; }
+  var CHECK_SVG = '<svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 4.5"/></svg>';
+  function secId(ci,pi,ii){ return ci+"."+pi+"."+ii; }
+
+  /* ---------------- render: phase 1 ---------------- */
+  var chapWrap = document.getElementById("chapters");
+  PLAN.forEach(function(chap, ci){
+    var card = el("div","card");
+    if(state.open[ci]) card.classList.add("open");
+
+    var head = el("div","chap-head");
+    var top = el("div","chap-head-top");
+    top.appendChild(el("span","cnum", chap.n.replace("Chapitre ","CH ")));
+    top.appendChild(el("span","ctitle", chap.title));
+    top.appendChild(el("span","chev","›"));
+    head.appendChild(top);
+    var meta = el("div","chap-head-meta");
+    meta.appendChild(el("span","cmonth", chap.month));
+    var prog = el("span","cprog","");
+    meta.appendChild(prog);
+    head.appendChild(meta);
+    head.addEventListener("click", function(){
+      card.classList.toggle("open");
+      state.open[ci] = card.classList.contains("open"); save();
+    });
+    card.appendChild(head);
+
+    var body = el("div","chap-body");
+    chap.parts.forEach(function(part, pi){
+      body.appendChild(el("div","part-label", part.p));
+      part.items.forEach(function(name, ii){
+        var id = secId(ci,pi,ii);
+        var row = el("div","row");
+        if(state.sec[id]) row.classList.add("checked");
+
+        var box = el("div","check"); box.innerHTML = CHECK_SVG;
+        box.addEventListener("click", function(){
+          state.sec[id] = !state.sec[id];
+          row.classList.toggle("checked", !!state.sec[id]);
+          save(); refresh();
+        });
+        row.appendChild(box);
+        row.appendChild(el("span","txt", name));
+
+        var flag = el("button","flag" + (state.weak[id]?" on":""), "★");
+        flag.title = "Section où je galère";
+        flag.addEventListener("click", function(){
+          state.weak[id] = !state.weak[id];
+          flag.classList.toggle("on", !!state.weak[id]);
+          save(); renderWeak();
+        });
+        row.appendChild(flag);
+        body.appendChild(row);
+      });
+    });
+    card.appendChild(body);
+    chapWrap.appendChild(card);
+
+    chap._prog = prog;
+  });
+
+  function chapCounts(ci){
+    var chap = PLAN[ci], done=0, tot=0;
+    chap.parts.forEach(function(part,pi){ part.items.forEach(function(_,ii){
+      tot++; if(state.sec[secId(ci,pi,ii)]) done++;
+    });});
+    return [done,tot];
+  }
+
+  /* ---------------- render: weak points ---------------- */
+  var weaklist = document.getElementById("weaklist");
+  function renderWeak(){
+    weaklist.innerHTML="";
+    var any=false;
+    PLAN.forEach(function(chap,ci){ chap.parts.forEach(function(part,pi){ part.items.forEach(function(name,ii){
+      if(state.weak[secId(ci,pi,ii)]){
+        any=true;
+        weaklist.appendChild(el("li",null,"<span>"+chap.n.replace("Chapitre ","Ch. ")+" — "+name+"</span>"));
+      }
+    });});});
+    if(!any) weaklist.appendChild(el("li","empty","Rien pour l’instant. Marque les sections dures avec ★."));
+  }
+
+  /* ---------------- render: phase 2 ---------------- */
+  var p2wrap = document.getElementById("phase2");
+  PHASE2.forEach(function(item, i){
+    var task = el("div","task");
+    var main = el("div","tmain");
+    main.appendChild(el("div","tt", item.t));
+    main.appendChild(el("div","td", item.d));
+    if(!item.single){
+      var subs = el("div","subchecks");
+      P2SUB.forEach(function(lbl,j){
+        var k = i+"-"+j;
+        var chip = el("div","chip"+(state.p2[k]?" on":""), lbl);
+        chip.addEventListener("click", function(){
+          state.p2[k]=!state.p2[k]; chip.classList.toggle("on",!!state.p2[k]); save(); refresh();
+        });
+        subs.appendChild(chip);
+      });
+      main.appendChild(subs);
+      task.appendChild(main);
+    } else {
+      var box = el("div","check"); box.innerHTML=CHECK_SVG;
+      var k = i+"-0";
+      task.classList.toggle("checked", !!state.p2[k]);
+      if(state.p2[k]) box.style.cssText="background:var(--good);border-color:var(--good)";
+      box.querySelector("svg").style.opacity = state.p2[k]?1:0;
+      box.querySelector("svg").style.transform = state.p2[k]?"scale(1)":"scale(.4)";
+      box.addEventListener("click", function(){
+        state.p2[k]=!state.p2[k];
+        box.style.cssText = state.p2[k]?"background:var(--good);border-color:var(--good)":"";
+        box.querySelector("svg").style.opacity = state.p2[k]?1:0;
+        box.querySelector("svg").style.transform = state.p2[k]?"scale(1)":"scale(.4)";
+        save(); refresh();
+      });
+      task.insertBefore(box, task.firstChild);
+      task.appendChild(main);
+    }
+    p2wrap.appendChild(task);
+  });
+
+  /* ---------------- render: phase 3 ---------------- */
+  var p3wrap = document.getElementById("phase3");
+  PHASE3.forEach(function(item, i){
+    var task = el("div","task");
+    var box = el("div","check"); box.innerHTML=CHECK_SVG;
+    function paint(){
+      var on = !!state.p3[i];
+      box.style.cssText = on?"background:var(--good);border-color:var(--good)":"";
+      var svg = box.querySelector("svg");
+      svg.style.opacity = on?1:0; svg.style.transform = on?"scale(1)":"scale(.4)";
+    }
+    paint();
+    box.addEventListener("click", function(){ state.p3[i]=!state.p3[i]; paint(); save(); refresh(); });
+    task.appendChild(box);
+
+    var main = el("div","tmain");
+    main.appendChild(el("div","tt", item.t));
+    main.appendChild(el("div","td", item.d));
+    task.appendChild(main);
+
+    if(item.score){
+      var inp = el("input","score-in"); inp.type="text"; inp.placeholder="… /100";
+      inp.value = state.score[i] || "";
+      inp.addEventListener("input", function(){ state.score[i]=inp.value; save(); });
+      task.appendChild(inp);
+    }
+    p3wrap.appendChild(task);
+  });
+
+  /* ---------------- meters + countdown ---------------- */
+  function setMeter(id, done, tot){
+    var pct = tot ? Math.round(done/tot*100) : 0;
+    document.getElementById(id+"pct").textContent = pct+" %";
+    document.getElementById(id+"cnt").textContent = done+" / "+tot;
+    document.getElementById(id+"fill").style.width = pct+"%";
+    document.getElementById(id).classList.toggle("done", done===tot && tot>0);
+  }
+  function refresh(){
+    var d1=0,t1=0;
+    PLAN.forEach(function(_,ci){ var c=chapCounts(ci); d1+=c[0]; t1+=c[1];
+      PLAN[ci]._prog.textContent = c[0]+"/"+c[1];
+    });
+    setMeter("m1", d1, t1);
+
+    var d2=0,t2=0;
+    PHASE2.forEach(function(item,i){
+      if(item.single){ t2+=1; if(state.p2[i+"-0"]) d2+=1; }
+      else { P2SUB.forEach(function(_,j){ t2+=1; if(state.p2[i+"-"+j]) d2+=1; }); }
+    });
+    setMeter("m2", d2, t2);
+
+    var d3=0,t3=PHASE3.length;
+    PHASE3.forEach(function(_,i){ if(state.p3[i]) d3+=1; });
+    setMeter("m3", d3, t3);
+  }
+
+  function countdown(){
+    var now = new Date();
+    var days = Math.ceil((EXAM - now)/86400000);
+    var cd = document.getElementById("cd");
+    if(days > 0) cd.textContent = "J–"+days;
+    else if(days === 0) cd.textContent = "Jour J ✈️";
+    else cd.textContent = "examen passé";
+    var weeks = Math.floor(days/7);
+    if(days>0) document.getElementById("cdsub").textContent =
+      "≈ "+weeks+" semaines · examen autour du 19 mai 2027 · prêt visé le 10 mai";
+  }
+
+  /* ---------------- theme ---------------- */
+  var themeBtn = document.getElementById("themeBtn");
+  var order = ["auto","light","dark"];
+  var glyph = {auto:"🌓",light:"☀️",dark:"🌙"};
+  function applyTheme(){
+    document.documentElement.setAttribute("data-theme", state.theme);
+    themeBtn.textContent = glyph[state.theme];
+  }
+  themeBtn.addEventListener("click", function(){
+    state.theme = order[(order.indexOf(state.theme)+1)%3];
+    applyTheme(); save();
+  });
+
+  /* ---------------- reset ---------------- */
+  document.getElementById("resetBtn").addEventListener("click", function(){
+    if(confirm("Remettre toute la progression à zéro ?")){
+      var th = state.theme;
+      state = { sec:{}, weak:{}, p2:{}, p3:{}, score:{}, open:{}, theme:th };
+      try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+      location.reload();
+    }
+  });
+
+  /* ---------------- go ---------------- */
+  applyTheme();
+  renderWeak();
+  refresh();
+  countdown();
+  setInterval(countdown, 3600000);
+})();
+</script>
+</body>
+</html>
