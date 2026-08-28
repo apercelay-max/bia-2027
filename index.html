@@ -1344,7 +1344,10 @@
     var nr=el("div","set-row"); nr.style.flexDirection="column"; nr.style.alignItems="stretch";
     var permTxt = ("Notification" in window) ? ({granted:"autorisées", denied:"bloquées"}[Notification.permission] || "à autoriser") : "non gérées";
     nr.innerHTML='<div><div class="sl">Rappel du matin</div><div class="sd">Chaque matin ~8 h : une notif t’ouvre un quiz de 5 questions sur ce que tu as revu. '
-      + (state.dailyOn ? 'Activé sur cet appareil.' : 'Notifications '+permTxt+'.') + '</div></div>';
+      + (state.dailyOn
+          ? ('Activé sur cet appareil ('+(state.subs||[]).length+' abonné'+((state.subs||[]).length>1?'s':'')+'). '
+             + (syncCode ? 'Pour recevoir la notif aussi sur ton autre appareil : relie-le avec le code <b>'+syncCode+'</b> (carte Synchro), puis active le rappel là-bas.' : ''))
+          : ('Notifications '+permTxt+'. À faire depuis l’app installée (Dock sur Mac, écran d’accueil sur iPad).')) + '</div></div>';
     var nb=el("button","btn-danger", state.dailyOn ? "Désactiver" : "Activer le rappel");
     nb.style.cssText="border-color:var(--accent);color:var(--accent);margin-top:10px;align-self:flex-start";
     var nmsg=el("div","sd"); nmsg.style.marginTop="8px";
@@ -1573,12 +1576,14 @@
   }
   function pushSupported(){ return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window; }
 
+  var isTrueIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1 && !window.MSStream);
   function enableDailyReminder(cb){
-    if(!pushSupported()){ cb("Ton navigateur ne gère pas les notifications."); return; }
-    var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
-    if(isIOS && !isStandalone()){ cb("Sur iPad : installe d’abord l’app (Partager → Sur l’écran d’accueil), puis rouvre-la depuis l’écran d’accueil."); return; }
+    if(!pushSupported()){ cb("Cet appareil / navigateur ne gère pas les notifications web. Sur iPad il faut iPadOS 16.4 ou plus."); return; }
+    if(isTrueIOS && !isStandalone()){ cb("Sur iPad : ouvre l’app depuis l’icône de l’écran d’accueil (pas l’onglet Safari), puis reviens ici."); return; }
+    if(Notification.permission === "denied"){ cb("Les notifications sont bloquées pour ce site. Réactive-les : Réglages de l’appareil → l’app BIA 2027 → Notifications."); return; }
     Notification.requestPermission().then(function(perm){
-      if(perm!=="granted"){ cb("Notifications refusées. Autorise-les dans les réglages du navigateur pour l’app."); return; }
+      if(perm!=="granted"){ cb("Autorisation refusée. Tu peux la redonner dans les réglages de notifications de l’appareil."); return; }
       if(!syncCode){ syncCode=genCode(); try{ localStorage.setItem(SYNC_CODE_KEY,syncCode); localStorage.removeItem(SYNC_SEEN_KEY); }catch(e){} }
       navigator.serviceWorker.ready.then(function(reg){
         return reg.pushManager.getSubscription().then(function(existing){
@@ -1590,10 +1595,11 @@
         state.subs.push(js);
         state.dailyOn=true;
         ensureDailyQuiz();
-        save();
+        try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+        if(sb && syncCode) pushSync();       // envoi immédiat vers Supabase (pas d'attente)
         cb(null);
-      }).catch(function(e){ cb("Échec de l’abonnement : "+(e && e.message || e)); });
-    });
+      }).catch(function(e){ cb("Échec de l’abonnement : "+((e && e.message) || e)); });
+    }).catch(function(e){ cb("Impossible de demander l’autorisation : "+((e && e.message) || e)); });
   }
   function disableDailyReminder(cb){
     state.dailyOn=false;
