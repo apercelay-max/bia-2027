@@ -643,10 +643,13 @@
   function load(){
     try{ var s=JSON.parse(localStorage.getItem(KEY)); if(s&&typeof s==="object"){
       s.sec=s.sec||{}; s.weak=s.weak||{}; s.p2=s.p2||{}; s.p3=s.p3||{}; s.score=s.score||{};
-      s.open=s.open||{}; s.qcm=s.qcm||{}; s.theme=s.theme||"auto"; s.tab=s.tab||"planning";
+      s.open=s.open||{}; s.qcm=s.qcm||{}; s.qcmAt=s.qcmAt||{}; s.theme=s.theme||"auto"; s.tab=s.tab||"planning";
+      s.subs=s.subs||[]; s.dailyOn=!!s.dailyOn; s.daily=s.daily||null;
+      s.dailyStreak=s.dailyStreak||0; s.dailyLast=s.dailyLast||"";
       return s;
     }}catch(e){}
-    return { sec:{}, weak:{}, p2:{}, p3:{}, score:{}, open:{}, qcm:{}, theme:"auto", tab:"planning" };
+    return { sec:{}, weak:{}, p2:{}, p3:{}, score:{}, open:{}, qcm:{}, qcmAt:{}, theme:"auto", tab:"planning",
+             subs:[], dailyOn:false, daily:null, dailyStreak:0, dailyLast:"" };
   }
   var saveT;
   function save(){ clearTimeout(saveT); saveT=setTimeout(function(){
@@ -686,6 +689,71 @@
     QCM.forEach(function(p){ var s=qcmPartStats(p); f+=s.faites; j+=s.justes; t+=s.total; });
     return {faites:f,justes:j,total:t};
   }
+
+  /* ================= quiz du jour ================= */
+  function todayISO(){
+    try{ return new Date().toLocaleDateString("fr-CA",{timeZone:"Europe/Paris"}); }
+    catch(e){ var d=new Date(); return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); }
+  }
+  function isoToUTC(iso){ var p=(iso||"").split("-"); return Date.UTC(+p[0], (+p[1]||1)-1, +p[2]||1); }
+  function daysAgoISO(iso){
+    if(!iso) return 999;
+    return Math.round((isoToUTC(todayISO()) - isoToUTC(iso)) / 86400000);
+  }
+  // index de chapitre PLAN -> id d'épreuve QCM
+  var CHAP2EP = { 0:"aero", 1:"aeronefs", 2:"meteo", 3:"nav", 4:"histoire" };
+  function activeEpIds(){
+    var seen = {};
+    for(var k in state.sec){ if(state.sec[k]) seen[k.split(".")[0]] = 1; }
+    var ids = Object.keys(seen).map(function(ci){ return CHAP2EP[ci]; }).filter(Boolean);
+    return ids.length ? ids : QCM.map(function(p){ return p.id; }); // rien coché → révision générale
+  }
+  function qById(qid){
+    var pa = qid.split("."), p = QCM.find(function(x){ return x.id===pa[0]; });
+    return p ? p.questions[+pa[1]] : null;
+  }
+  // choisit 5 qid, priorité : jamais faites > ratées > vues il y a longtemps
+  function pickDailyQuiz(){
+    var eps = activeEpIds();
+    var A=[], B=[], C=[], all=[];
+    QCM.forEach(function(p){
+      if(eps.indexOf(p.id) < 0) return;
+      p.questions.forEach(function(q,i){
+        var qid = p.id+"."+i, v = state.qcm[qid];
+        all.push(qid);
+        if(daysAgoISO(state.qcmAt[qid]) <= 1) return;           // pas revoir ce qu'on vient de faire
+        if(v===undefined || v===-1) A.push(qid);
+        else if(v !== q.c) B.push(qid);
+        else if(daysAgoISO(state.qcmAt[qid]) >= 6) C.push(qid);
+      });
+    });
+    function shuf(a){ for(var i=a.length-1;i>0;i--){ var j=(Math.random()*(i+1))|0; var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+    shuf(A); shuf(B); shuf(C); shuf(all);
+    var pick = [];
+    function take(arr,n){ for(var i=0;i<arr.length && pick.length<5 && n>0;i++){ if(pick.indexOf(arr[i])<0){ pick.push(arr[i]); n--; } } }
+    take(A,3); take(B,1); take(C,1); take(A,5); take(C,5); take(B,5); take(all,5);
+    return pick.slice(0,5);
+  }
+  function ensureDailyQuiz(){
+    if(!state.dailyOn) return;
+    var t = todayISO();
+    if(state.daily && state.daily.date === t) return;   // déjà un quiz pour aujourd'hui (local ou routine)
+    var qids = pickDailyQuiz();
+    if(!qids.length) return;
+    state.daily = { date:t, qids:qids, done:false };
+    save();
+  }
+  function dailyPending(){
+    return !!(state.dailyOn && state.daily && state.daily.date === todayISO() && !state.daily.done);
+  }
+  function dailyScore(){
+    if(!state.daily) return 0;
+    var n=0;
+    state.daily.qids.forEach(function(qid){
+      var q = qById(qid); if(q && state.qcm[qid]!==undefined && state.qcm[qid]!==-1 && state.qcm[qid]===q.c) n++;
+    });
+    return n;
+  }
   function fmtDelta(x){ return (x>0?"+":"")+x; }
   function plur(n,s,p){ return (Math.abs(n)>1) ? (p||(s+"s")) : s; }
   function cap(str){ return str.charAt(0).toUpperCase()+str.slice(1); }
@@ -724,6 +792,20 @@
     setBar("Planning", null);
     var sd=scheduleDelta();
     var d1=countSec();
+
+    if(dailyPending()){
+      var dq=el("div","card");
+      dq.style.cssText="margin-bottom:16px;border-color:var(--accent);background:var(--accent-soft);cursor:pointer";
+      var dn=0; state.daily.qids.forEach(function(x){ if(state.qcm[x]!==undefined && state.qcm[x]!==-1) dn++; });
+      dq.innerHTML='<div style="padding:14px 16px;display:flex;align-items:center;gap:12px">'+
+        '<div style="font-size:1.4rem">🎯</div>'+
+        '<div style="flex:1"><div style="font-weight:750">Quiz du jour</div>'+
+        '<div style="font-size:.8rem;color:var(--muted)">'+(dn?(dn+' / '+state.daily.qids.length+' faites'):'5 questions sur ce que tu as revu')+
+        ' · série '+state.dailyStreak+' '+plur(state.dailyStreak,"jour")+'</div></div>'+
+        '<div style="color:var(--accent);font-weight:800">›</div></div>';
+      dq.addEventListener("click",function(){ state.tab="dailyquiz"; save(); render(); });
+      host.appendChild(dq);
+    }
 
     var top=el("div","card");
     top.style.marginBottom="16px";
@@ -1016,6 +1098,7 @@
         btn.addEventListener("click",function(){
           if(q.classList.contains("revealed")) return;
           state.qcm[p.id+"."+i]=j;
+          state.qcmAt[p.id+"."+i]=todayISO();
           if(j!==qd.c) btn.classList.add("chosen","wrong");
           q.classList.add("revealed");
           save();
@@ -1058,6 +1141,80 @@
       var s=qcmPartStats(QCM[i]); b.textContent=QCM[i].nav+" · "+s.faites+"/"+s.total;
       b.classList.toggle("active",i===qcmPart);
     });
+  }
+
+  /* ================= RENDER : Quiz du jour ================= */
+  function goBackFromQuiz(){ state.tab = "planning"; save(); render(); }
+
+  function renderDailyQuiz(host){
+    setBar("Quiz du jour", null);
+    if(!state.daily){ ensureDailyQuiz(); }
+    var d = state.daily;
+    if(!d || !d.qids || !d.qids.length){
+      host.appendChild(el("div","card","<div style='font-size:.9rem'>Pas de quiz aujourd’hui. Active « Rappel du matin » dans les Réglages, ou coche des sections dans le Planning.</div>"));
+      var bb=el("button","tool","‹ Retour"); bb.style.marginTop="12px"; bb.addEventListener("click",goBackFromQuiz);
+      host.appendChild(bb); return;
+    }
+
+    var head=el("div","card"); head.style.marginBottom="14px";
+    var done=0; d.qids.forEach(function(qid){ if(state.qcm[qid]!==undefined && state.qcm[qid]!==-1) done++; });
+    var finished = done >= d.qids.length;
+    head.appendChild(el("div","hero",
+      '<div class="big">'+ (finished ? (dailyScore()+" / "+d.qids.length) : (done+" / "+d.qids.length)) +'</div>'+
+      '<div class="sub">'+ (finished
+        ? ('Quiz terminé. Série : <b>'+state.dailyStreak+'</b> '+plur(state.dailyStreak,"jour")+'. Reviens demain matin.')
+        : ('5 questions sur ce que tu as revu. Série en cours : '+state.dailyStreak+' '+plur(state.dailyStreak,"jour")) ) +'</div>'));
+    host.appendChild(head);
+
+    var list=el("div","qlist");
+    d.qids.forEach(function(qid,idx){
+      var pa=qid.split("."), pid=pa[0], qi=+pa[1];
+      var p=QCM.find(function(x){ return x.id===pid; }); if(!p) return;
+      var qd=p.questions[qi];
+      var q=el("div","q");
+      q.appendChild(el("div","q-stem",'<span class="qn">'+(idx+1)+'</span><span>'+qd.q+'</span>'));
+      var ul=el("ul","q-opts");
+      var stored=state.qcm[qid];
+      qd.o.forEach(function(opt,j){
+        var li=el("li");
+        var btn=el("button","q-opt"+(j===qd.c?" correct":""),'<span class="k">'+LETTERS[j]+'</span><span>'+opt+'</span>');
+        btn.type="button";
+        btn.addEventListener("click",function(){
+          if(q.classList.contains("revealed")) return;
+          state.qcm[qid]=j; state.qcmAt[qid]=todayISO();
+          if(j!==qd.c) btn.classList.add("chosen","wrong");
+          q.classList.add("revealed");
+          // fini ?
+          var d2=0; state.daily.qids.forEach(function(x){ if(state.qcm[x]!==undefined && state.qcm[x]!==-1) d2++; });
+          if(d2 >= state.daily.qids.length && !state.daily.done){
+            state.daily.done = true;
+            var t = todayISO();
+            if(state.dailyLast !== t){
+              state.dailyStreak = (daysAgoISO(state.dailyLast) === 1) ? state.dailyStreak+1 : 1;
+              state.dailyLast = t;
+            }
+          }
+          save();
+          render();
+        });
+        li.appendChild(btn); ul.appendChild(li);
+      });
+      q.appendChild(ul);
+      q.appendChild(el("div","q-why",'<b>'+LETTERS[qd.c]+'.</b> '+qd.w+'  <span style="color:var(--faint)">— '+p.nav+'</span>'));
+      if(stored!==undefined && stored!==-1){
+        q.classList.add("revealed");
+        var bs=ul.querySelectorAll(".q-opt");
+        if(stored!==qd.c && bs[stored]) bs[stored].classList.add("chosen","wrong");
+      }
+      list.appendChild(q);
+    });
+    host.appendChild(list);
+
+    var bar=el("div"); bar.style.cssText="display:flex;gap:8px;margin-top:16px";
+    var back=el("button","tool", finished ? "Revenir au planning" : "‹ Retour");
+    back.addEventListener("click",goBackFromQuiz);
+    bar.appendChild(back);
+    host.appendChild(bar);
   }
 
   /* ================= RENDER : Dashboard ================= */
@@ -1182,6 +1339,37 @@
     ic.appendChild(ir);
     host.appendChild(ic);
 
+    /* ---- Rappel du matin (notification + quiz du jour) ---- */
+    var nc=el("div","card"); nc.style.marginBottom="14px";
+    var nr=el("div","set-row"); nr.style.flexDirection="column"; nr.style.alignItems="stretch";
+    var permTxt = ("Notification" in window) ? ({granted:"autorisées", denied:"bloquées"}[Notification.permission] || "à autoriser") : "non gérées";
+    nr.innerHTML='<div><div class="sl">Rappel du matin</div><div class="sd">Chaque matin ~8 h : une notif t’ouvre un quiz de 5 questions sur ce que tu as revu. '
+      + (state.dailyOn ? 'Activé sur cet appareil.' : 'Notifications '+permTxt+'.') + '</div></div>';
+    var nb=el("button","btn-danger", state.dailyOn ? "Désactiver" : "Activer le rappel");
+    nb.style.cssText="border-color:var(--accent);color:var(--accent);margin-top:10px;align-self:flex-start";
+    var nmsg=el("div","sd"); nmsg.style.marginTop="8px";
+    nb.addEventListener("click",function(){
+      nb.disabled=true; nmsg.textContent="…";
+      if(state.dailyOn){
+        disableDailyReminder(function(){ render(); });
+      } else {
+        enableDailyReminder(function(err){
+          nb.disabled=false;
+          if(err){ nmsg.textContent=err; }
+          else { render(); }
+        });
+      }
+    });
+    nr.appendChild(nb); nr.appendChild(nmsg);
+    if(state.dailyOn){
+      var tq=el("button","btn-danger","Voir le quiz du jour");
+      tq.style.cssText="border-color:var(--border-strong);color:var(--text);margin-top:8px;align-self:flex-start";
+      tq.addEventListener("click",function(){ ensureDailyQuiz(); state.tab="dailyquiz"; save(); render(); });
+      nr.appendChild(tq);
+    }
+    nc.appendChild(nr);
+    host.appendChild(nc);
+
     /* ---- Synchro Mac ↔ iPad ---- */
     var sc=el("div","card"); sc.style.marginBottom="14px";
     var sr=el("div","set-row"); sr.style.flexDirection="column"; sr.style.alignItems="stretch";
@@ -1222,7 +1410,8 @@
     db.addEventListener("click",function(){
       if(confirm("Remettre toute la progression à zéro ?"+(syncCode?" (aussi sur les appareils synchronisés)":""))){
         var th=state.theme;
-        state={ sec:{}, weak:{}, p2:{}, p3:{}, score:{}, open:{}, qcm:{}, theme:th, tab:"planning" };
+        state={ sec:{}, weak:{}, p2:{}, p3:{}, score:{}, open:{}, qcm:{}, qcmAt:{}, theme:th, tab:"planning",
+                subs:state.subs||[], dailyOn:state.dailyOn||false, daily:null, dailyStreak:0, dailyLast:"" };
         try{ localStorage.setItem(KEY,JSON.stringify(state)); localStorage.removeItem(SYNC_SEEN_KEY); }catch(e){}
         if(sb&&syncCode){ sb.from(SYNC_TABLE).upsert({ code:syncCode, data:state }).then(function(){ location.reload(); }); }
         else location.reload();
@@ -1281,7 +1470,8 @@
   function applyTheme(){ document.documentElement.setAttribute("data-theme",state.theme); }
 
   /* ================= ROUTER ================= */
-  var RENDER={ planning:renderPlanning, calendrier:renderCalendrier, questions:renderQuestions, dashboard:renderDashboard, reglages:renderReglages };
+  var RENDER={ planning:renderPlanning, calendrier:renderCalendrier, questions:renderQuestions,
+               dashboard:renderDashboard, reglages:renderReglages, dailyquiz:renderDailyQuiz };
   function render(){
     renderTabbar();
     var host=document.getElementById("view");
@@ -1370,7 +1560,55 @@
     render();
   }
 
+  /* ================= NOTIFICATIONS : rappel du matin ================= */
+  var VAPID_PUBLIC="BC791P1FqS-u4pPpbqvGyGswlPxHW7S4A8-ZwMFUQF2CLynoOv9934TRHboysRXmpmDmHMTKnfm6_9YlNXWbnaQ";
+  function b64ToU8(s){
+    var pad="=".repeat((4-s.length%4)%4), b=(s+pad).replace(/-/g,"+").replace(/_/g,"/");
+    var raw=atob(b), a=new Uint8Array(raw.length);
+    for(var i=0;i<raw.length;i++) a[i]=raw.charCodeAt(i);
+    return a;
+  }
+  function isStandalone(){
+    return (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+  }
+  function pushSupported(){ return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window; }
+
+  function enableDailyReminder(cb){
+    if(!pushSupported()){ cb("Ton navigateur ne gère pas les notifications."); return; }
+    var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+    if(isIOS && !isStandalone()){ cb("Sur iPad : installe d’abord l’app (Partager → Sur l’écran d’accueil), puis rouvre-la depuis l’écran d’accueil."); return; }
+    Notification.requestPermission().then(function(perm){
+      if(perm!=="granted"){ cb("Notifications refusées. Autorise-les dans les réglages du navigateur pour l’app."); return; }
+      if(!syncCode){ syncCode=genCode(); try{ localStorage.setItem(SYNC_CODE_KEY,syncCode); localStorage.removeItem(SYNC_SEEN_KEY); }catch(e){} }
+      navigator.serviceWorker.ready.then(function(reg){
+        return reg.pushManager.getSubscription().then(function(existing){
+          return existing || reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:b64ToU8(VAPID_PUBLIC) });
+        });
+      }).then(function(sub){
+        var js=sub.toJSON();
+        state.subs=(state.subs||[]).filter(function(s){ return s && s.endpoint!==js.endpoint; });
+        state.subs.push(js);
+        state.dailyOn=true;
+        ensureDailyQuiz();
+        save();
+        cb(null);
+      }).catch(function(e){ cb("Échec de l’abonnement : "+(e && e.message || e)); });
+    });
+  }
+  function disableDailyReminder(cb){
+    state.dailyOn=false;
+    if("serviceWorker" in navigator){
+      navigator.serviceWorker.ready.then(function(reg){ return reg.pushManager.getSubscription(); })
+        .then(function(sub){
+          if(sub){ var ep=sub.endpoint; state.subs=(state.subs||[]).filter(function(s){ return s && s.endpoint!==ep; }); sub.unsubscribe().catch(function(){}); }
+          save(); cb && cb();
+        }).catch(function(){ save(); cb && cb(); });
+    } else { save(); cb && cb(); }
+  }
+
   applyTheme();
+  try{ if(new URLSearchParams(location.search).get("quiz")){ state.tab="dailyquiz"; } }catch(e){}
+  ensureDailyQuiz();
   render();
   if(syncCode) pullSync();
 })();

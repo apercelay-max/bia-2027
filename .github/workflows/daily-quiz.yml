@@ -1,0 +1,33 @@
+name: Quiz BIA du jour
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # ~08 h Paris (été) / 07 h (hiver) — GitHub cron est en UTC
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Régénérer même si le quiz du jour existe déjà"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-quiz
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm i --no-save @supabase/supabase-js web-push
+      - run: node scripts/daily-quiz.mjs
+        env:
+          VAPID_PUBLIC: ${{ secrets.VAPID_PUBLIC }}
+          VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
+          FORCE: ${{ (github.event_name == 'workflow_dispatch' && inputs.force) && '1' || '0' }}

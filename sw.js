@@ -1,6 +1,6 @@
 /* BIA 2027 — service worker
-   App-shell offline. Bump CACHE quand index.html change de façon importante. */
-const CACHE = 'bia-2027-v3';
+   App-shell offline + notifications push. Bump CACHE quand index.html change. */
+const CACHE = 'bia-2027-v4';
 const SHELL = [
   './',
   './index.html',
@@ -21,6 +21,33 @@ self.addEventListener('activate', (e) => {
     caches.keys()
       .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
+  );
+});
+
+/* ---- notifications push (quiz du jour) ---- */
+self.addEventListener('push', (e) => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (_) { d = { body: e.data ? e.data.text() : '' }; }
+  e.waitUntil(self.registration.showNotification(d.title || 'BIA 2027', {
+    body: d.body || '5 questions du jour t’attendent',
+    icon: './icon-192.png',
+    badge: './icon-192.png',
+    tag: 'bia-daily',
+    renotify: true,
+    data: { url: d.url || './?quiz=1' }
+  }));
+});
+
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || './?quiz=1';
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      for (const c of list) {
+        if ('focus' in c) { c.navigate(url); return c.focus(); }
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(url);
+    })
   );
 });
 
