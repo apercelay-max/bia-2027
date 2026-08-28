@@ -2,8 +2,17 @@
 <html lang="fr" data-theme="auto">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0e131c">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f3f5fa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e131c" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BIA 2027">
+<meta name="description" content="Planning de révision pour le Brevet d'Initiation Aéronautique — session mai 2027">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <title>BIA 2027 — révision</title>
 <style>
   :root{
@@ -253,30 +262,54 @@
   .seg button.on{background:var(--accent);color:var(--accent-ink)}
   .btn-danger{border:1px solid var(--bad);background:var(--surface);color:var(--bad);font-size:.8rem;font-weight:650;padding:8px 14px;border-radius:9px;cursor:pointer}
 
-  /* ---------- tab bar (liquid glass) ---------- */
+  /* ---------- barre du bas : verre liquide (repris de PPL Tracker) ---------- */
+  :root{
+    --glass-bg:rgba(255,255,255,0.58); --glass-border:rgba(255,255,255,0.6); --glass-hi:rgba(255,255,255,0.85);
+  }
+  :root[data-theme="dark"]{ --glass-bg:rgba(28,34,44,0.56); --glass-border:rgba(255,255,255,0.14); --glass-hi:rgba(255,255,255,0.18); }
+  @media (prefers-color-scheme:dark){ :root[data-theme="auto"]{ --glass-bg:rgba(28,34,44,0.56); --glass-border:rgba(255,255,255,0.14); --glass-hi:rgba(255,255,255,0.18); } }
   .tabbar{
-    position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));
-    max-width:520px;margin:0 auto;z-index:60;
-    display:flex;justify-content:space-around;gap:2px;padding:7px 6px;
-    background:color-mix(in srgb,var(--surface) 72%,transparent);
-    -webkit-backdrop-filter:saturate(200%) blur(22px);
-    backdrop-filter:saturate(200%) blur(22px);
-    border:1px solid var(--border-strong);
-    border-radius:22px;
-    box-shadow:0 10px 34px rgba(15,20,30,.22),0 2px 8px rgba(15,20,30,.1);
+    position:fixed;left:0;right:0;bottom:max(10px,env(safe-area-inset-bottom));
+    margin:0 auto;z-index:60;pointer-events:none;
+    display:flex;justify-content:center;
+  }
+  .tabbar-inner{
+    position:relative;overflow:hidden;pointer-events:auto;
+    display:flex;align-items:center;gap:2px;padding:6px;
+    width:calc(100% - 22px);max-width:480px;border-radius:22px;
+    background:var(--glass-bg);border:1px solid var(--glass-border);
+    box-shadow:0 -1px 0 var(--glass-hi) inset,0 8px 26px rgba(0,0,0,.28);
+    -webkit-backdrop-filter:blur(18px) saturate(180%) brightness(1.05);
+    backdrop-filter:blur(18px) saturate(180%) brightness(1.05);
+    transition:transform .28s cubic-bezier(.34,1.56,.64,1);
+  }
+  .tabbar-inner.pressed{transform:scale(.98)}
+  .tabbar-inner::before{
+    content:"";position:absolute;top:0;left:8%;right:8%;height:46%;pointer-events:none;
+    border-radius:50% 50% 60% 60% / 100% 100% 30% 30%;
+    background:linear-gradient(to bottom,rgba(255,255,255,.22),rgba(255,255,255,0));
+  }
+  .tabbar-inner::after{
+    content:"";position:absolute;inset:0;pointer-events:none;opacity:.9;mix-blend-mode:overlay;
+    background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,.32),transparent 60%);
   }
   .tabbar button{
-    flex:1;border:0;background:transparent;color:var(--faint);
-    display:flex;flex-direction:column;align-items:center;gap:3px;
-    padding:7px 2px 5px;border-radius:15px;cursor:pointer;
-    font-size:.62rem;font-weight:700;letter-spacing:.1px;
-    transition:color .15s ease,background .15s ease;
+    position:relative;flex:1;min-width:0;border:0;background:transparent;color:var(--faint);
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    padding:6px 2px;border-radius:14px;cursor:pointer;
+    font-size:9px;font-weight:550;letter-spacing:.02em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    transition:color .15s ease;
   }
-  .tabbar button svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-  .tabbar button.active{color:var(--accent-ink);background:var(--accent)}
-  .tabbar button:not(.active):active{background:var(--surface-2);color:var(--muted)}
+  .tabbar button span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .tabbar button svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .28s cubic-bezier(.34,1.4,.64,1)}
+  .tabbar button.active{color:var(--accent);font-weight:750}
+  .tabbar button.active svg{stroke-width:2.3}
+  .tabbar button.bounce svg{transform:scale(.84)}
+  body.noanim .tabbar-inner{transition:none}
+  body.noanim .tabbar-inner::after{display:none}
 
-  @media (prefers-reduced-motion:reduce){*{transition:none !important}}
+  @media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
 </style>
 </head>
 <body>
@@ -292,6 +325,7 @@
 
 <nav class="tabbar" id="tabbar" aria-label="Navigation"></nav>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
   "use strict";
@@ -617,6 +651,7 @@
   var saveT;
   function save(){ clearTimeout(saveT); saveT=setTimeout(function(){
     try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+    schedulePush();
   },140); }
 
   /* ================= helpers ================= */
@@ -1133,21 +1168,69 @@
     r3.innerHTML='<div><div class="sl">Page « Questions » détaillée</div><div class="sd">Version imprimable / à partager, hors de l’app</div></div>'+
       '<a href="https://claude.ai/code/artifact/43cdbb91-343d-4ec2-bcca-584d4f5c26ea" target="_blank" rel="noopener" style="font-size:.8rem;font-weight:650">Ouvrir ↗</a>';
     c.appendChild(r3);
+    host.appendChild(c);
 
+    /* ---- Installer l'app ---- */
+    var ic=el("div","card"); ic.style.marginBottom="14px";
+    var ir=el("div","set-row");
+    ir.innerHTML='<div><div class="sl">Installer l’app (Mac &amp; iPad)</div><div class="sd">'+installText()+'</div></div>';
+    var ib=el("button","btn-danger","Installer");
+    ib.id="installBtn"; ib.style.cssText="border-color:var(--accent);color:var(--accent);display:none";
+    if(deferredPrompt) ib.style.display="";
+    ib.addEventListener("click",doInstall);
+    ir.appendChild(ib);
+    ic.appendChild(ir);
+    host.appendChild(ic);
+
+    /* ---- Synchro Mac ↔ iPad ---- */
+    var sc=el("div","card"); sc.style.marginBottom="14px";
+    var sr=el("div","set-row"); sr.style.flexDirection="column"; sr.style.alignItems="stretch";
+    if(!syncCode){
+      sr.innerHTML='<div><div class="sl">Synchro Mac ↔ iPad</div><div class="sd">Crée un code sur un appareil, saisis-le sur l’autre : planning, questions et réglages suivent partout.</div></div>';
+      var mk=el("button","btn-danger","Créer un code"); mk.style.cssText="border-color:var(--accent);color:var(--accent);margin-top:10px;align-self:flex-start";
+      mk.addEventListener("click",syncCreate);
+      sr.appendChild(mk);
+      var link=el("div"); link.style.cssText="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center";
+      var inp=el("input"); inp.type="text"; inp.maxLength=6; inp.placeholder="Coller un code";
+      inp.style.cssText="font-family:var(--mono);font-size:.95rem;letter-spacing:.1em;text-transform:uppercase;padding:8px 11px;border-radius:8px;border:1px solid var(--border-strong);background:var(--bg);color:var(--text);width:150px";
+      var lk=el("button","btn-danger","Relier"); lk.style.cssText="border-color:var(--border-strong);color:var(--text)";
+      lk.addEventListener("click",function(){ syncLinkTo(inp.value); });
+      link.appendChild(inp); link.appendChild(lk);
+      sr.appendChild(link);
+    } else {
+      sr.innerHTML='<div><div class="sl">Synchro Mac ↔ iPad</div><div class="sd">Saisis ce code sur ton autre appareil.</div></div>';
+      var codeRow=el("div"); codeRow.style.cssText="display:flex;align-items:center;gap:11px;margin-top:10px;flex-wrap:wrap";
+      var codeEl=el("span",null,syncCode);
+      codeEl.style.cssText="font-family:var(--mono);font-size:1.4rem;font-weight:800;letter-spacing:.14em;color:var(--accent);background:var(--accent-soft);padding:6px 14px;border-radius:9px";
+      var cp=el("button","btn-danger","Copier"); cp.style.cssText="border-color:var(--border-strong);color:var(--text)";
+      cp.addEventListener("click",function(){ if(navigator.clipboard) navigator.clipboard.writeText(syncCode).catch(function(){}); setSyncMsg("Code copié"); });
+      codeRow.appendChild(codeEl); codeRow.appendChild(cp);
+      sr.appendChild(codeRow);
+      var stEl=el("div","sd"); stEl.id="syncStatus"; stEl.style.marginTop="9px"; stEl.textContent=syncMsg;
+      sr.appendChild(stEl);
+      var ul=el("button","btn-danger","Délier cet appareil"); ul.style.marginTop="8px"; ul.style.alignSelf="flex-start";
+      ul.addEventListener("click",syncUnlink);
+      sr.appendChild(ul);
+    }
+    sc.appendChild(sr);
+    host.appendChild(sc);
+
+    var rzc=el("div","card"); rzc.style.marginBottom="14px";
     var r4=el("div","set-row");
     r4.innerHTML='<div><div class="sl">Remise à zéro</div><div class="sd">Efface toute ta progression sur cet appareil</div></div>';
     var db=el("button","btn-danger","Tout effacer");
     db.addEventListener("click",function(){
-      if(confirm("Remettre toute la progression à zéro ?")){
+      if(confirm("Remettre toute la progression à zéro ?"+(syncCode?" (aussi sur les appareils synchronisés)":""))){
         var th=state.theme;
         state={ sec:{}, weak:{}, p2:{}, p3:{}, score:{}, open:{}, qcm:{}, theme:th, tab:"planning" };
-        try{ localStorage.setItem(KEY,JSON.stringify(state)); }catch(e){}
-        location.reload();
+        try{ localStorage.setItem(KEY,JSON.stringify(state)); localStorage.removeItem(SYNC_SEEN_KEY); }catch(e){}
+        if(sb&&syncCode){ sb.from(SYNC_TABLE).upsert({ code:syncCode, data:state }).then(function(){ location.reload(); }); }
+        else location.reload();
       }
     });
     r4.appendChild(db);
-    c.appendChild(r4);
-    host.appendChild(c);
+    rzc.appendChild(r4);
+    host.appendChild(rzc);
 
     host.appendChild(el("div",null,'<div style="font-size:.76rem;color:var(--faint);text-align:center;padding:8px 12px 0">'+
       'Progression enregistrée sur cet appareil (localStorage). Contenu basé sur le manuel officiel BIA (eduscol) et les sujets 2022–2025.</div>'));
@@ -1162,13 +1245,30 @@
     reglages:'<svg viewBox="0 0 24 24"><path d="M6 8h12M6 8a2 2 0 1 1 0 .01M6 16h12M14 16a2 2 0 1 1 .01 0"/></svg>'
   };
   var TABS=[["planning","Planning"],["calendrier","Calendrier"],["questions","Questions"],["dashboard","Dashboard"],["reglages","Réglages"]];
+  var tabbarWired=false;
   function renderTabbar(){
     var tb=document.getElementById("tabbar");
     tb.innerHTML="";
+    var inner=el("div","tabbar-inner");
     TABS.forEach(function(t){
       var b=el("button",state.tab===t[0]?"active":null, ICON[t[0]]+"<span>"+t[1]+"</span>");
-      b.addEventListener("click",function(){ if(state.tab!==t[0]){ state.tab=t[0]; save(); render(); } });
-      tb.appendChild(b);
+      b.setAttribute("aria-label",t[1]);
+      b.addEventListener("click",function(){
+        b.classList.add("bounce"); setTimeout(function(){ b.classList.remove("bounce"); },260);
+        if(state.tab!==t[0]){ state.tab=t[0]; save(); render(); }
+      });
+      inner.appendChild(b);
+    });
+    tb.appendChild(inner);
+    inner.addEventListener("pointerdown",function(){ inner.classList.add("pressed"); });
+    ["pointerup","pointerleave","pointercancel"].forEach(function(ev){
+      inner.addEventListener(ev,function(){ inner.classList.remove("pressed"); });
+    });
+    inner.addEventListener("pointermove",function(e){
+      if(e.pointerType==="touch") return;
+      var r=inner.getBoundingClientRect();
+      inner.style.setProperty("--gx",((e.clientX-r.left)/r.width*100)+"%");
+      inner.style.setProperty("--gy",((e.clientY-r.top)/r.height*100)+"%");
     });
   }
 
@@ -1190,9 +1290,95 @@
     window.scrollTo(0,0);
   }
 
+  /* ================= PWA : installation ================= */
+  var deferredPrompt=null;
+  window.addEventListener("beforeinstallprompt",function(e){
+    e.preventDefault(); deferredPrompt=e;
+    var btn=document.getElementById("installBtn");
+    if(btn) btn.style.display="";
+  });
+  function doInstall(){
+    if(!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.finally(function(){
+      deferredPrompt=null;
+      var btn=document.getElementById("installBtn"); if(btn) btn.style.display="none";
+    });
+  }
+  function installText(){
+    var ua=navigator.userAgent;
+    var isIOS=/iPad|iPhone|iPod/.test(ua) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+    if(isIOS) return "<b>iPad</b> — dans Safari : bouton <b>Partager</b> (carré + flèche) → <b>Sur l'écran d'accueil</b>. L'app s'ouvre en plein écran, et marche hors ligne.";
+    return "<b>Mac</b> — Safari : menu <b>Fichier → Ajouter au Dock</b>. Chrome / Edge : icône <b>Installer</b> dans la barre d'adresse (ou le bouton ci-dessus).<br><b>iPad</b> — Safari : <b>Partager → Sur l'écran d'accueil</b>.";
+  }
+
+  /* ================= SYNCHRO Mac ↔ iPad (Supabase) ================= */
+  var SYNC_CODE_KEY=KEY+"-sync-code";
+  var SYNC_SEEN_KEY=KEY+"-sync-seen";
+  var SUPABASE_URL="https://elyspjsyconovzczmzhm.supabase.co";
+  var SUPABASE_KEY="sb_publishable_jpQmyTu3lkT65xw0Z6oXmg_7zxkqRXW";
+  var SYNC_TABLE="bia_2027_state";
+  var syncCode=""; try{ syncCode=localStorage.getItem(SYNC_CODE_KEY)||""; }catch(e){}
+  var sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
+  var syncMsg="";
+  function setSyncMsg(t){ syncMsg=t; var e=document.getElementById("syncStatus"); if(e) e.textContent=t; }
+  function genCode(){ var c="ABCDEFGHJKMNPQRSTUVWXYZ23456789",o=""; for(var i=0;i<6;i++) o+=c[Math.floor(Math.random()*c.length)]; return o; }
+  var pushT=null;
+  function schedulePush(){ if(!sb||!syncCode) return; clearTimeout(pushT); pushT=setTimeout(pushSync,900); }
+  function pushSync(){
+    if(!sb||!syncCode) return;
+    setSyncMsg("Synchronisation…");
+    sb.from(SYNC_TABLE).upsert({ code:syncCode, data:state }).select("updated_at").single().then(function(res){
+      if(res.error){ setSyncMsg("Échec : "+res.error.message); return; }
+      try{ localStorage.setItem(SYNC_SEEN_KEY,res.data.updated_at); }catch(e){}
+      setSyncMsg("Synchronisé à l'instant");
+    });
+  }
+  function pullSync(){
+    if(!sb||!syncCode) return;
+    setSyncMsg("Vérification…");
+    sb.from(SYNC_TABLE).select("data, updated_at").eq("code",syncCode).maybeSingle().then(function(res){
+      if(res.error){ setSyncMsg("Échec : "+res.error.message); return; }
+      if(!res.data){ pushSync(); return; }
+      var seen=null; try{ seen=localStorage.getItem(SYNC_SEEN_KEY); }catch(e){}
+      if(res.data.updated_at!==seen){
+        try{
+          localStorage.setItem(KEY,JSON.stringify(res.data.data));
+          localStorage.setItem(SYNC_SEEN_KEY,res.data.updated_at);
+        }catch(e){}
+        location.reload();
+      } else setSyncMsg("À jour");
+    });
+  }
+  function syncCreate(){
+    if(!sb){ alert("Connexion indisponible (hors ligne ?)"); return; }
+    syncCode=genCode();
+    try{ localStorage.setItem(SYNC_CODE_KEY,syncCode); localStorage.removeItem(SYNC_SEEN_KEY); }catch(e){}
+    render(); pushSync();
+  }
+  function syncLinkTo(code){
+    code=(code||"").trim().toUpperCase();
+    if(!code) return;
+    syncCode=code;
+    try{ localStorage.setItem(SYNC_CODE_KEY,syncCode); localStorage.removeItem(SYNC_SEEN_KEY); }catch(e){}
+    render(); pullSync();
+  }
+  function syncUnlink(){
+    if(!confirm("Délier cet appareil ? Il garde sa progression mais ne se synchronise plus.")) return;
+    syncCode="";
+    try{ localStorage.removeItem(SYNC_CODE_KEY); localStorage.removeItem(SYNC_SEEN_KEY); }catch(e){}
+    render();
+  }
+
   applyTheme();
   render();
+  if(syncCode) pullSync();
 })();
+</script>
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load",function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
+}
 </script>
 </body>
 </html>
