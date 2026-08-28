@@ -1,28 +1,26 @@
 /* BIA 2027 — routine quotidienne.
- * Chaque matin : lit la progression de Léo dans Supabase, choisit 5 questions
- * (pondérées vers ce qu'il a révisé, révision espacée), écrit `data.daily`,
- * et envoie une notification push qui ouvre le quiz du jour.
+ * Chaque matin : lit la progression de Léo dans Supabase (REST, pas de client
+ * lourd), choisit 5 questions (pondérées vers ce qu'il a révisé, révision
+ * espacée), écrit `data.daily`, et envoie une notification push qui ouvre le
+ * quiz du jour. Purge les abonnements expirés.
  *
  * Lancé par .github/workflows/daily-quiz.yml. Rien à builder côté app.
  * Seul secret attendu : VAPID_PRIVATE. (La clé publique et la clé Supabase
  * publiable sont déjà exposées dans index.html — pas des secrets.)
  */
-import { createClient } from '@supabase/supabase-js';
 import webpush from 'web-push';
 
-const SUPABASE_URL = 'https://elyspjsyconovzczmzhm.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_jpQmyTu3lkT65xw0Z6oXmg_7zxkqRXW';
-const TABLE = 'bia_2027_state';
-// même clé publique que dans index.html (VAPID_PUBLIC) — publique par nature
+const SUPA = 'https://elyspjsyconovzczmzhm.supabase.co/rest/v1/bia_2027_state';
+const KEY = 'sb_publishable_jpQmyTu3lkT65xw0Z6oXmg_7zxkqRXW';
+const H = { apikey: KEY, Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' };
+
 const VAPID_PUBLIC = 'BC791P1FqS-u4pPpbqvGyGswlPxHW7S4A8-ZwMFUQF2CLynoOv9934TRHboysRXmpmDmHMTKnfm6_9YlNXWbnaQ';
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE;
 const FORCE = process.env.FORCE === '1';
-
 if (!VAPID_PRIVATE) { console.error('Secret VAPID_PRIVATE manquant'); process.exit(1); }
 webpush.setVapidDetails('https://bia-2027.vercel.app', VAPID_PUBLIC, VAPID_PRIVATE);
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* --- données minimales (index de la bonne réponse par question, dans l'ordre) --- */
+/* --- index de la bonne réponse par question, dans l'ordre --- */
 const CORRECT = {
   meteo:    [1,2,3,1,0,1,1,2,1,1,2,1,1,2,1,1],
   aero:     [1,2,2,1,2,0,1,1,1,1,1,0,1,1,1,0],
@@ -74,12 +72,24 @@ function body(state, qids) {
   return streak >= 2 ? `${base}. Série : ${streak} jours 🔥` : base;
 }
 
-async function run() {
-  const { data: rows, error } = await sb.from(TABLE).select('code, data');
-  if (error) { console.error('lecture Supabase:', error.message); process.exit(1); }
+async function getRows() {
+  const r = await fetch(`${SUPA}?select=code,data`, { headers: H });
+  if (!r.ok) throw new Error(`lecture Supabase ${r.status}: ${await r.text()}`);
+  return r.json();
+}
+async function upsertRow(code, data) {
+  const r = await fetch(SUPA, {
+    method: 'POST',
+    headers: { ...H, Prefer: 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify({ code, data }),
+  });
+  if (!r.ok) throw new Error(`écriture ${code} ${r.status}: ${await r.text()}`);
+}
 
+async function run() {
+  const rows = await getRows();
   const t = todayISO();
-  let pushed = 0, seeded = 0;
+  let pushed = 0, updated = 0;
 
   for (const row of rows || []) {
     const state = row.data || {};
@@ -91,14 +101,13 @@ async function run() {
 
     let qids;
     if (already && !FORCE) {
-      qids = state.daily.qids;              // quiz déjà généré (par l'app) → on garde, on relance juste la notif
+      qids = state.daily.qids;                 // quiz déjà généré par l'app → on garde, on relance juste la notif
     } else {
       qids = pickQuiz(state);
       if (!qids.length) { console.log(`${row.code}: aucune question disponible`); continue; }
       state.daily = { date: t, qids, done: false };
     }
 
-    // envoi push, purge des abonnements morts
     const live = [];
     for (const sub of subs) {
       try {
@@ -109,18 +118,18 @@ async function run() {
         }));
         live.push(sub); pushed++;
       } catch (e) {
-        if (e.statusCode === 404 || e.statusCode === 410) console.log(`${row.code}: abonnement expiré, retiré`);
-        else { console.log(`${row.code}: push échoué (${e.statusCode || e.message})`); live.push(sub); }
+        const code = e && e.statusCode;
+        if (code === 404 || code === 410) console.log(`${row.code}: abonnement expiré, retiré`);
+        else { console.log(`${row.code}: push échoué (${code || (e && e.message)})`); live.push(sub); }
       }
     }
     state.subs = live;
 
-    const { error: upErr } = await sb.from(TABLE).upsert({ code: row.code, data: state });
-    if (upErr) console.error(`${row.code}: écriture:`, upErr.message);
-    else seeded++;
+    try { await upsertRow(row.code, state); updated++; }
+    catch (e) { console.error(String(e)); }
   }
 
-  console.log(`Terminé — ${pushed} notif(s) envoyée(s), ${seeded} ligne(s) mise(s) à jour.`);
+  console.log(`Terminé — ${pushed} notif(s) envoyée(s), ${updated} ligne(s) mise(s) à jour.`);
 }
 
 run().catch((e) => { console.error(e); process.exit(1); });
