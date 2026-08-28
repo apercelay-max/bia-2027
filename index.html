@@ -4,36 +4,43 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0e131c">
-<title>BIA 2027 — planning de révision</title>
+<title>BIA 2027 — révision</title>
 <style>
   :root{
-    --bg:#eef1f6; --surface:#ffffff; --surface-2:#f6f8fb;
+    --bg:#eef1f6; --surface:#ffffff; --surface-2:#f6f8fb; --surface-3:#eef2f7;
     --text:#161c27; --muted:#5c6675; --faint:#8a94a3;
     --border:#e2e7ee; --border-strong:#d3d9e2;
     --accent:#2f6df0; --accent-ink:#ffffff; --accent-soft:#e7effe;
     --good:#128a5b; --good-soft:#dcf3e9;
     --warn:#c9781a; --warn-soft:#fbeede;
+    --bad:#c23b22; --bad-soft:#f7e4e0;
+    --p1:#2f6df0; --p2:#8a5cf6; --p3:#0e9488; --exam:#c23b22;
     --shadow:0 1px 2px rgba(19,28,45,.06),0 8px 24px rgba(19,28,45,.07);
     --radius:16px;
     --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
   }
   :root[data-theme="dark"]{
-    --bg:#0e131c; --surface:#161d29; --surface-2:#1c2533;
+    --bg:#0e131c; --surface:#161d29; --surface-2:#1c2533; --surface-3:#212c3c;
     --text:#eaeef5; --muted:#9aa5b4; --faint:#6f7b8c;
     --border:#26303f; --border-strong:#313d4f;
     --accent:#5b93ff; --accent-ink:#0b1220; --accent-soft:#1b2742;
     --good:#3ecf8e; --good-soft:#123528;
     --warn:#e0a458; --warn-soft:#3a2c17;
+    --bad:#ef7a63; --bad-soft:#3a2018;
+    --p1:#5b93ff; --p2:#a689fb; --p3:#3fc7bb; --exam:#ef7a63;
     --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
   }
   @media (prefers-color-scheme:dark){
     :root[data-theme="auto"]{
-      --bg:#0e131c; --surface:#161d29; --surface-2:#1c2533;
+      --bg:#0e131c; --surface:#161d29; --surface-2:#1c2533; --surface-3:#212c3c;
       --text:#eaeef5; --muted:#9aa5b4; --faint:#6f7b8c;
       --border:#26303f; --border-strong:#313d4f;
       --accent:#5b93ff; --accent-ink:#0b1220; --accent-soft:#1b2742;
       --good:#3ecf8e; --good-soft:#123528;
       --warn:#e0a458; --warn-soft:#3a2c17;
+      --bad:#ef7a63; --bad-soft:#3a2018;
+      --p1:#5b93ff; --p2:#a689fb; --p3:#3fc7bb; --exam:#ef7a63;
       --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
     }
   }
@@ -42,272 +49,258 @@
   body{
     font-family:var(--font);background:var(--bg);color:var(--text);
     line-height:1.5;-webkit-font-smoothing:antialiased;
-    padding-bottom:64px;
+    padding-bottom:96px;
   }
   a{color:var(--accent)}
+  button{font-family:var(--font)}
 
-  /* ---------- top bar ---------- */
-  .topbar{
+  .wrap{max-width:760px;margin:0 auto;padding:0 18px}
+
+  /* ---------- app bar ---------- */
+  .appbar{
     position:sticky;top:0;z-index:20;
     background:color-mix(in srgb,var(--surface) 82%,transparent);
     -webkit-backdrop-filter:saturate(180%) blur(16px);
     backdrop-filter:saturate(180%) blur(16px);
     border-bottom:1px solid var(--border);
   }
-  .topbar-inner{
-    max-width:760px;margin:0 auto;padding:12px 18px;
-    display:flex;align-items:center;justify-content:space-between;gap:12px;
+  .appbar-inner{
+    max-width:760px;margin:0 auto;padding:13px 18px 12px;
+    display:flex;align-items:baseline;justify-content:space-between;gap:12px;
   }
-  .brand{font-weight:700;font-size:1.02rem;letter-spacing:.2px;display:flex;align-items:center;gap:8px}
-  .brand small{font-weight:500;color:var(--muted);font-size:.8rem}
-  .icon-btn{
-    border:1px solid var(--border-strong);background:var(--surface);color:var(--text);
-    width:38px;height:38px;border-radius:11px;font-size:1rem;cursor:pointer;
-    display:grid;place-items:center;transition:transform .12s ease,background .2s ease;
-  }
-  .icon-btn:active{transform:scale(.92)}
+  .appbar h1{font-size:1.12rem;font-weight:750;letter-spacing:.2px;display:flex;align-items:center;gap:8px}
+  .appbar .ctx{font-size:.82rem;color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 
-  .dash{max-width:760px;margin:0 auto;padding:4px 18px 16px}
-  .countdown{
-    display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
-    margin-bottom:14px;
-  }
-  .countdown b{font-size:1.5rem;font-weight:750;letter-spacing:.3px}
-  .countdown span{color:var(--muted);font-size:.86rem}
-  .meters{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-  @media (max-width:520px){.meters{grid-template-columns:1fr}}
-  .meter{
-    background:var(--surface);border:1px solid var(--border);border-radius:13px;
-    padding:10px 12px;box-shadow:var(--shadow);
-  }
-  .meter .lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.6px;color:var(--faint);font-weight:650}
-  .meter .val{font-size:.96rem;font-weight:700;margin:3px 0 7px;display:flex;justify-content:space-between;align-items:baseline}
-  .meter .val em{font-style:normal;color:var(--muted);font-weight:600;font-size:.8rem}
-  .track{height:7px;border-radius:99px;background:var(--surface-2);overflow:hidden;border:1px solid var(--border)}
-  .fill{height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .5s cubic-bezier(.2,.7,.2,1)}
-  .meter.done .fill{background:var(--good)}
+  main{max-width:760px;margin:0 auto;padding:18px}
 
-  /* ---------- layout ---------- */
-  main{max-width:760px;margin:0 auto;padding:20px 18px 40px}
-  .phase{margin-bottom:34px}
-  .phase-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:6px}
-  .phase-num{
-    flex:none;width:30px;height:30px;border-radius:9px;background:var(--accent);color:var(--accent-ink);
-    font-weight:750;display:grid;place-items:center;font-size:.92rem;margin-top:2px;
-  }
-  .phase-head h2{font-size:1.16rem;font-weight:730;letter-spacing:.2px}
-  .phase-head p{color:var(--muted);font-size:.85rem;margin-top:1px}
-
+  /* ---------- generic ---------- */
   .card{
     background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-    box-shadow:var(--shadow);overflow:hidden;margin-top:12px;
+    box-shadow:var(--shadow);overflow:hidden;
   }
-  .chap-head{
-    display:flex;flex-direction:column;gap:8px;padding:13px 15px;cursor:pointer;
-    user-select:none;-webkit-user-select:none;
-  }
+  .stack{display:flex;flex-direction:column;gap:14px}
+  .sec-title{font-size:.74rem;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--faint);margin:6px 2px 2px}
+
+  .track{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden;border:1px solid var(--border)}
+  .fill{height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .5s cubic-bezier(.2,.7,.2,1)}
+
+  /* ---------- Planning tab ---------- */
+  .phase{margin-bottom:28px}
+  .phase-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:4px}
+  .phase-num{flex:none;width:28px;height:28px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-weight:750;display:grid;place-items:center;font-size:.88rem;margin-top:2px}
+  .phase-head h2{font-size:1.1rem;font-weight:730}
+  .phase-head p{color:var(--muted);font-size:.83rem;margin-top:1px}
+
+  .chap{margin-top:11px}
+  .chap-head{display:flex;flex-direction:column;gap:8px;padding:13px 15px;cursor:pointer;user-select:none;-webkit-user-select:none}
   .chap-head-top{display:flex;align-items:center;gap:10px}
-  .chap-head .cnum{
-    flex:none;font-size:.72rem;font-weight:750;color:var(--accent);
-    background:var(--accent-soft);border-radius:7px;padding:3px 7px;letter-spacing:.4px;
-  }
-  .chap-head .ctitle{flex:1;font-weight:670;font-size:.94rem;line-height:1.34}
-  .chap-head .chev{color:var(--faint);transition:transform .2s ease;flex:none;font-size:1.15rem;line-height:1}
+  .cnum{flex:none;font-size:.7rem;font-weight:750;color:var(--accent);background:var(--accent-soft);border-radius:7px;padding:3px 7px;letter-spacing:.4px}
+  .ctitle{flex:1;font-weight:670;font-size:.93rem;line-height:1.34}
+  .chev{color:var(--faint);transition:transform .2s ease;flex:none;font-size:1.15rem;line-height:1}
+  .chap.open .chev{transform:rotate(90deg)}
   .chap-head-meta{display:flex;align-items:center;gap:8px}
-  .chap-head .cmonth{font-size:.74rem;color:var(--faint);font-weight:600}
-  .chap-head .cprog{
-    margin-left:auto;font-size:.76rem;color:var(--muted);font-weight:700;
-    font-variant-numeric:tabular-nums;background:var(--surface-2);
-    border:1px solid var(--border);padding:2px 9px;border-radius:99px;
-  }
-  .card.open .chev{transform:rotate(90deg)}
+  .cmonth{font-size:.74rem;color:var(--faint);font-weight:600}
+  .cprog{margin-left:auto;font-size:.76rem;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums;background:var(--surface-2);border:1px solid var(--border);padding:2px 9px;border-radius:99px}
   .chap-body{display:none;border-top:1px solid var(--border);padding:6px 4px 8px}
-  .card.open .chap-body{display:block}
-
-  .part-label{
-    font-size:.74rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
-    color:var(--faint);padding:12px 14px 5px;
-  }
-
-  .row{
-    display:flex;align-items:center;gap:12px;padding:9px 14px;border-radius:10px;
-    transition:background .15s ease;
-  }
+  .chap.open .chap-body{display:block}
+  .part-label{font-size:.72rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--faint);padding:12px 14px 5px}
+  .row{display:flex;align-items:center;gap:12px;padding:9px 14px;border-radius:10px;transition:background .15s ease}
   .row:hover{background:var(--surface-2)}
-  .check{
-    flex:none;width:22px;height:22px;border-radius:7px;border:2px solid var(--border-strong);
-    background:var(--surface);cursor:pointer;display:grid;place-items:center;
-    transition:background .15s ease,border-color .15s ease,transform .1s ease;
-  }
+  .check{flex:none;width:22px;height:22px;border-radius:7px;border:2px solid var(--border-strong);background:var(--surface);cursor:pointer;display:grid;place-items:center;transition:background .15s ease,border-color .15s ease,transform .1s ease}
   .check:active{transform:scale(.85)}
-  .check svg{width:13px;height:13px;stroke:var(--accent-ink);stroke-width:3.5;fill:none;
-    stroke-linecap:round;stroke-linejoin:round;opacity:0;transform:scale(.4);
-    transition:opacity .15s ease,transform .15s ease}
+  .check svg{width:13px;height:13px;stroke:var(--accent-ink);stroke-width:3.5;fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:0;transform:scale(.4);transition:opacity .15s ease,transform .15s ease}
   .row.checked .check{background:var(--good);border-color:var(--good)}
   .row.checked .check svg{opacity:1;transform:scale(1)}
   .row .txt{flex:1;font-size:.9rem}
   .row.checked .txt{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--border-strong)}
-  .row .snum{color:var(--faint);font-size:.78rem;font-weight:650;font-variant-numeric:tabular-nums;flex:none;width:1.4em;text-align:right}
-  .flag{
-    flex:none;border:0;background:transparent;cursor:pointer;font-size:1rem;
-    color:var(--faint);opacity:.5;padding:4px;line-height:1;
-    transition:opacity .15s ease,transform .1s ease,color .15s ease;
-  }
+  .flag{flex:none;border:0;background:transparent;cursor:pointer;font-size:1rem;color:var(--faint);opacity:.5;padding:4px;line-height:1;transition:opacity .15s ease,transform .1s ease,color .15s ease}
   .flag:active{transform:scale(.8)}
   .flag.on{opacity:1;color:var(--warn)}
 
-  /* task rows (phase 2 & 3) */
-  .task{
-    display:flex;align-items:center;gap:12px;padding:11px 15px;border-top:1px solid var(--border);
-  }
+  .task{display:flex;align-items:center;gap:12px;padding:11px 15px;border-top:1px solid var(--border)}
   .task:first-child{border-top:0}
   .task .tmain{flex:1}
-  .task .tt{font-weight:640;font-size:.92rem}
-  .task .td{color:var(--muted);font-size:.78rem;margin-top:1px}
+  .task .tt{font-weight:640;font-size:.9rem}
+  .task .td{color:var(--muted);font-size:.77rem;margin-top:1px}
   .subchecks{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
-  .chip{
-    display:inline-flex;align-items:center;gap:6px;font-size:.76rem;font-weight:650;
-    padding:5px 10px;border-radius:99px;border:1px solid var(--border-strong);
-    background:var(--surface);color:var(--muted);cursor:pointer;user-select:none;-webkit-user-select:none;
-    transition:all .15s ease;
-  }
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:650;padding:5px 10px;border-radius:99px;border:1px solid var(--border-strong);background:var(--surface);color:var(--muted);cursor:pointer;user-select:none;-webkit-user-select:none;transition:all .15s ease}
   .chip:active{transform:scale(.94)}
   .chip.on{background:var(--good-soft);border-color:var(--good);color:var(--good)}
-  .score-in{
-    width:74px;font-family:var(--font);font-size:.82rem;font-weight:650;
-    border:1px solid var(--border-strong);border-radius:9px;padding:6px 8px;
-    background:var(--surface);color:var(--text);
-  }
+  .score-in{width:78px;font-family:var(--font);font-size:.82rem;font-weight:650;border:1px solid var(--border-strong);border-radius:9px;padding:6px 8px;background:var(--surface);color:var(--text)}
   .score-in::placeholder{color:var(--faint);font-weight:500}
 
-  /* weak-points panel */
-  .weakbox{
-    margin-top:12px;background:var(--warn-soft);border:1px solid var(--warn);
-    border-radius:13px;padding:12px 14px;
-  }
-  .weakbox h3{font-size:.82rem;text-transform:uppercase;letter-spacing:.6px;color:var(--warn);margin-bottom:6px}
+  .weakbox{margin-top:12px;background:var(--warn-soft);border:1px solid var(--warn);border-radius:13px;padding:12px 14px}
+  .weakbox h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.6px;color:var(--warn);margin-bottom:6px}
   .weakbox ul{list-style:none;display:flex;flex-direction:column;gap:4px}
-  .weakbox li{font-size:.86rem;display:flex;gap:8px}
+  .weakbox li{font-size:.85rem;display:flex;gap:8px}
   .weakbox li::before{content:"★";color:var(--warn);flex:none}
-  .weakbox .empty{font-size:.84rem;color:var(--muted)}
+  .weakbox .empty{font-size:.83rem;color:var(--muted)}
 
   details.method{margin-top:14px;background:var(--surface);border:1px solid var(--border);border-radius:13px;box-shadow:var(--shadow)}
-  details.method summary{padding:13px 15px;font-weight:670;font-size:.92rem;cursor:pointer;list-style:none}
+  details.method summary{padding:13px 15px;font-weight:670;font-size:.9rem;cursor:pointer;list-style:none}
   details.method summary::-webkit-details-marker{display:none}
   details.method summary::before{content:"▸ ";color:var(--faint)}
   details.method[open] summary::before{content:"▾ "}
-  details.method .m-body{padding:0 15px 15px;font-size:.88rem;color:var(--muted)}
+  details.method .m-body{padding:0 15px 15px;font-size:.86rem;color:var(--muted)}
   details.method .m-body p{margin-top:9px}
   details.method .m-body strong{color:var(--text)}
 
-  footer{max-width:760px;margin:0 auto;padding:8px 18px 30px;color:var(--faint);font-size:.78rem;text-align:center}
-  footer button{
-    margin-top:10px;border:1px solid var(--border-strong);background:var(--surface);color:var(--muted);
-    font-size:.78rem;padding:7px 14px;border-radius:9px;cursor:pointer;font-family:var(--font);
+  /* ---------- Dashboard tab ---------- */
+  .hero{padding:18px 17px}
+  .hero .big{font-size:2rem;font-weight:800;letter-spacing:.3px;line-height:1}
+  .hero .sub{color:var(--muted);font-size:.84rem;margin-top:6px}
+  .statgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  @media (max-width:460px){.statgrid{grid-template-columns:1fr}}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:13px 14px;box-shadow:var(--shadow)}
+  .stat .lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.6px;color:var(--faint);font-weight:650}
+  .stat .val{font-size:1.5rem;font-weight:770;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+  .stat .hint{font-size:.76rem;color:var(--muted)}
+  .stat .track{margin-top:9px}
+  .delta-pill{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:.82rem;padding:4px 10px;border-radius:99px}
+  .delta-pill.ahead{background:var(--good-soft);color:var(--good)}
+  .delta-pill.behind{background:var(--bad-soft);color:var(--bad)}
+  .delta-pill.ontrack{background:var(--accent-soft);color:var(--accent)}
+  .mini-rows{display:flex;flex-direction:column;gap:10px}
+  .mini{display:flex;align-items:center;gap:10px;font-size:.82rem}
+  .mini .mlbl{flex:none;width:118px;color:var(--muted);font-weight:600}
+  .mini .track{flex:1}
+  .mini .mval{flex:none;font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted);width:52px;text-align:right}
+
+  /* ---------- Calendar tab ---------- */
+  .cal-headline{padding:16px 16px}
+  .cal-headline .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.6px;color:var(--faint);font-weight:700}
+  .cal-headline .v{font-size:1.15rem;font-weight:760;margin:5px 0 3px}
+  .cal-headline .d{font-size:.82rem;color:var(--muted)}
+  .cal-nav{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border)}
+  .cal-nav b{font-size:.98rem;font-weight:730;text-transform:capitalize}
+  .cal-nav button{border:1px solid var(--border-strong);background:var(--surface);color:var(--text);width:34px;height:34px;border-radius:10px;font-size:1rem;cursor:pointer}
+  .cal-nav button:active{transform:scale(.92)}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:10px}
+  .cal-dow{text-align:center;font-size:.66rem;font-weight:750;color:var(--faint);text-transform:uppercase;letter-spacing:.4px;padding:4px 0}
+  .cal-cell{aspect-ratio:1/1;border-radius:9px;border:1px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:.82rem;font-weight:600;cursor:pointer;position:relative;background:var(--surface-2);color:var(--text)}
+  .cal-cell.blank{background:transparent;cursor:default}
+  .cal-cell.p1{background:color-mix(in srgb,var(--p1) 13%,var(--surface))}
+  .cal-cell.p2{background:color-mix(in srgb,var(--p2) 14%,var(--surface))}
+  .cal-cell.p3{background:color-mix(in srgb,var(--p3) 15%,var(--surface))}
+  .cal-cell.exam{background:var(--exam);color:#fff}
+  .cal-cell.vac{outline:2px dashed color-mix(in srgb,var(--warn) 55%,transparent);outline-offset:-3px}
+  .cal-cell.today{border-color:var(--text);box-shadow:0 0 0 1px var(--text) inset}
+  .cal-cell.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+  .cal-cell .dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.55}
+  .cal-cell .mk{font-size:.7rem;line-height:1}
+  .cal-legend{display:flex;flex-wrap:wrap;gap:10px 14px;padding:4px 16px 16px;font-size:.74rem;color:var(--muted)}
+  .cal-legend span{display:inline-flex;align-items:center;gap:6px}
+  .cal-legend i{width:12px;height:12px;border-radius:4px;display:inline-block}
+  .cal-detail{padding:14px 16px;border-top:1px solid var(--border);font-size:.86rem}
+  .cal-detail .dt{font-weight:730;margin-bottom:4px}
+  .cal-detail .dl{color:var(--muted)}
+  .cal-detail .dl b{color:var(--text)}
+
+  /* ---------- Questions tab ---------- */
+  .ep-pills{display:flex;gap:6px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:none}
+  .ep-pills::-webkit-scrollbar{display:none}
+  .ep-pill{flex:0 0 auto;font-size:.78rem;font-weight:670;padding:8px 12px;border-radius:10px;border:1px solid var(--border-strong);background:var(--surface);color:var(--muted);cursor:pointer;white-space:nowrap}
+  .ep-pill.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .ep-head{padding:15px 16px}
+  .ep-head .eb{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600}
+  .ep-head h2{font-size:1.16rem;font-weight:750;margin:5px 0 6px;line-height:1.15}
+  .ep-head p{color:var(--muted);font-size:.86rem}
+  .panel{margin:12px 0;border-radius:13px;padding:14px 15px;border:1px solid var(--border)}
+  .panel.fiche{background:var(--surface);border-left:3px solid var(--accent)}
+  .panel.pieges{background:var(--warn-soft);border-color:color-mix(in srgb,var(--warn) 45%,transparent)}
+  .panel h3{font-family:var(--mono);font-size:.7rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;margin-bottom:9px}
+  .panel.fiche h3{color:var(--accent)}
+  .panel.pieges h3{color:var(--warn)}
+  .panel ul{list-style:none;display:flex;flex-direction:column;gap:7px}
+  .panel li{font-size:.86rem;padding-left:17px;position:relative;color:var(--muted)}
+  .panel.fiche li::before{content:"›";position:absolute;left:2px;color:var(--accent);font-weight:700}
+  .panel.pieges li::before{content:"✕";position:absolute;left:2px;color:var(--warn);font-size:.8em;top:.15em}
+  .panel li b{color:var(--text);font-weight:600}
+  .panel li .num{font-family:var(--mono);color:var(--text);font-weight:500;font-size:.92em}
+  .q-tools{display:flex;gap:8px;align-items:center;margin:14px 0 12px;flex-wrap:wrap}
+  .q-tools .count{font-family:var(--mono);font-size:.74rem;color:var(--faint);margin-right:auto}
+  .q-tools .count b{color:var(--good)}
+  button.tool{font-family:var(--mono);font-size:.74rem;background:var(--surface);color:var(--muted);border:1px solid var(--border-strong);border-radius:8px;padding:6px 11px;cursor:pointer}
+  button.tool:active{transform:scale(.96)}
+  .qlist{display:flex;flex-direction:column;gap:11px}
+  .q{border:1px solid var(--border);border-radius:12px;background:var(--surface);overflow:hidden}
+  .q-stem{padding:13px 15px 11px;font-weight:500;font-size:.95rem;display:flex;gap:9px}
+  .q-stem .qn{font-family:var(--mono);font-size:.8rem;color:var(--accent);font-weight:600;flex:none;padding-top:.1em}
+  .q-opts{list-style:none;display:flex;flex-direction:column;gap:1px;background:var(--border);border-top:1px solid var(--border)}
+  .q-opt{display:flex;gap:10px;width:100%;text-align:left;background:var(--surface);color:var(--text);border:0;padding:11px 15px;font:inherit;font-size:.9rem;cursor:pointer;line-height:1.45}
+  .q-opt:active{background:var(--surface-2)}
+  .q-opt .k{font-family:var(--mono);font-weight:500;color:var(--faint);flex:none}
+  .q.revealed .q-opt{cursor:default}
+  .q.revealed .q-opt.correct{background:var(--good-soft)}
+  .q.revealed .q-opt.correct .k{color:var(--good);font-weight:700}
+  .q.revealed .q-opt.correct::after{content:"✓";margin-left:auto;color:var(--good);font-weight:700}
+  .q.revealed .q-opt.chosen.wrong{background:var(--bad-soft)}
+  .q.revealed .q-opt.chosen.wrong .k{color:var(--bad);font-weight:700}
+  .q.revealed .q-opt.chosen.wrong::after{content:"✕";margin-left:auto;color:var(--bad);font-weight:700}
+  .q-why{display:none;padding:11px 15px;background:var(--accent-soft);font-size:.85rem;color:var(--muted);border-top:1px solid var(--border)}
+  .q-why b{color:var(--text);font-weight:600}
+  .q.revealed .q-why{display:block}
+
+  /* ---------- Réglages tab ---------- */
+  .set-row{display:flex;align-items:center;justify-content:space-between;gap:10px 14px;padding:14px 15px;border-top:1px solid var(--border);flex-wrap:wrap}
+  .set-row:first-child{border-top:0}
+  .set-row>div:first-child{flex:1 1 55%;min-width:180px}
+  .set-row .sl{font-weight:640;font-size:.9rem}
+  .set-row .sd{font-size:.77rem;color:var(--muted);margin-top:1px}
+  .set-row a{white-space:nowrap}
+  .seg{display:inline-flex;border:1px solid var(--border-strong);border-radius:10px;overflow:hidden;flex:0 0 auto}
+  .seg button{border:0;background:var(--surface);color:var(--muted);font-size:.78rem;font-weight:650;padding:7px 13px;cursor:pointer}
+  .seg button.on{background:var(--accent);color:var(--accent-ink)}
+  .btn-danger{border:1px solid var(--bad);background:var(--surface);color:var(--bad);font-size:.8rem;font-weight:650;padding:8px 14px;border-radius:9px;cursor:pointer}
+
+  /* ---------- tab bar (liquid glass) ---------- */
+  .tabbar{
+    position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));
+    max-width:520px;margin:0 auto;z-index:60;
+    display:flex;justify-content:space-around;gap:2px;padding:7px 6px;
+    background:color-mix(in srgb,var(--surface) 72%,transparent);
+    -webkit-backdrop-filter:saturate(200%) blur(22px);
+    backdrop-filter:saturate(200%) blur(22px);
+    border:1px solid var(--border-strong);
+    border-radius:22px;
+    box-shadow:0 10px 34px rgba(15,20,30,.22),0 2px 8px rgba(15,20,30,.1);
   }
-  footer button:active{transform:scale(.96)}
-  .src{margin-top:6px}
+  .tabbar button{
+    flex:1;border:0;background:transparent;color:var(--faint);
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:7px 2px 5px;border-radius:15px;cursor:pointer;
+    font-size:.62rem;font-weight:700;letter-spacing:.1px;
+    transition:color .15s ease,background .15s ease;
+  }
+  .tabbar button svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .tabbar button.active{color:var(--accent-ink);background:var(--accent)}
+  .tabbar button:not(.active):active{background:var(--surface-2);color:var(--muted)}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none !important}}
 </style>
 </head>
 <body>
 
-<header class="topbar">
-  <div class="topbar-inner">
-    <div class="brand">✈️ BIA 2027 <small>planning de révision</small></div>
-    <button class="icon-btn" id="themeBtn" title="Thème" aria-label="Changer de thème">🌓</button>
+<div class="appbar">
+  <div class="appbar-inner">
+    <h1 id="barTitle">✈️ BIA 2027</h1>
+    <span class="ctx" id="barCtx"></span>
   </div>
-  <div class="dash">
-    <div class="countdown"><b id="cd">J–…</b><span id="cdsub">examen ≈ 19 mai 2027 · prêt visé le 10 mai</span></div>
-    <div class="meters">
-      <div class="meter" id="m1">
-        <div class="lbl">Phase 1 · Lecture 1</div>
-        <div class="val"><span id="m1pct">0 %</span><em id="m1cnt">0 / 65</em></div>
-        <div class="track"><div class="fill" id="m1fill"></div></div>
-      </div>
-      <div class="meter" id="m2">
-        <div class="lbl">Phase 2 · Lecture 2</div>
-        <div class="val"><span id="m2pct">0 %</span><em id="m2cnt">0 / 16</em></div>
-        <div class="track"><div class="fill" id="m2fill"></div></div>
-      </div>
-      <div class="meter" id="m3">
-        <div class="lbl">Phase 3 · Annales</div>
-        <div class="val"><span id="m3pct">0 %</span><em id="m3cnt">0 / 6</em></div>
-        <div class="track"><div class="fill" id="m3fill"></div></div>
-      </div>
-    </div>
-  </div>
-</header>
+</div>
 
-<main>
+<main id="view"></main>
 
-  <!-- PHASE 1 -->
-  <section class="phase">
-    <div class="phase-head">
-      <div class="phase-num">1</div>
-      <div>
-        <h2>Lecture 1 — comprendre</h2>
-        <p>Septembre 2026 → 10 février 2027. Tu lis tout une fois, 1 mini-fiche (3–5 lignes) par section. Rythme : 4 sections/semaine (une par jour, lundi→jeudi ; vendredi = relire les fiches de la semaine). Touche l’étoile ★ sur une section où tu galères.</p>
-      </div>
-    </div>
-    <div id="chapters"></div>
-    <div class="weakbox" id="weakbox">
-      <h3>Mes points faibles (★)</h3>
-      <ul id="weaklist"></ul>
-    </div>
-  </section>
-
-  <!-- PHASE 2 -->
-  <section class="phase">
-    <div class="phase-head">
-      <div class="phase-num">2</div>
-      <div>
-        <h2>Lecture 2 — mémoriser</h2>
-        <p>16 février → 12 avril 2027. Relecture rapide + vraies fiches + QCM à la fin de chaque chapitre. 30 min = 15 min relecture + 15 min fiche/QCM. Fiches recto-verso ou Anki.</p>
-      </div>
-    </div>
-    <div class="card" id="phase2"></div>
-  </section>
-
-  <!-- PHASE 3 -->
-  <section class="phase">
-    <div class="phase-head">
-      <div class="phase-num">3</div>
-      <div>
-        <h2>Annales — s’entraîner</h2>
-        <p>13 avril → jour J. 1 sujet complet par semaine, chronométré (2 h 30, 100 QCM), puis correction question par question. Le reste : fiches + questions ratées uniquement.</p>
-      </div>
-    </div>
-    <div class="card" id="phase3"></div>
-    <details class="method">
-      <summary>Méthode & rappels</summary>
-      <div class="m-body">
-        <p><strong>Chaque jour :</strong> 30 min = 20 min de lecture + 10 min de trace écrite. Pas de trace écrite = ça ne compte pas.</p>
-        <p><strong>Points faibles :</strong> chaque section marquée ★ passe en priorité en phase 2 et 3.</p>
-        <p><strong>Météo (chapitre 3) :</strong> le plus dense et le plus piégeux — c’est normal d’y passer 2 semaines en phase 2.</p>
-        <p><strong>Anglais :</strong> épreuve facultative = uniquement des points en plus, aucune pénalité. 2 × 20 min de vocabulaire par semaine à partir d’avril.</p>
-        <p><strong>Vacances</strong> (Toussaint, Noël, hiver) : tu souffles ou tu prends de l’avance — c’est ton matelas si une semaine saute.</p>
-        <p><strong>3 derniers jours :</strong> relecture des fiches seulement, zéro nouveau contenu, et tu dors.</p>
-        <p><strong>Date exacte :</strong> l’examen est un mercredi après-midi de mai (le 20 mai en 2026). La date officielle 2027 sort vers décembre 2026 au Bulletin officiel.</p>
-      </div>
-    </details>
-  </section>
-
-</main>
-
-<footer>
-  Progression enregistrée sur cet appareil (localStorage). Manuel officiel BIA — eduscol.
-  <div class="src"><a href="https://sti.eduscol.education.fr/bia/manuel_bia_2019/Chapitre_1" target="_blank" rel="noopener">Manuel BIA en ligne</a></div>
-  <button id="resetBtn">Tout remettre à zéro</button>
-</footer>
+<nav class="tabbar" id="tabbar" aria-label="Navigation"></nav>
 
 <script>
 (function(){
   "use strict";
 
   var KEY = "bia-2027-v1";
-  var EXAM = new Date("2027-05-19T14:00:00");
+  var EXAM = new Date(2027,4,19);
+  var READY = new Date(2027,4,10);
 
-  /* ---------------- data ---------------- */
+  /* ================= DATA : planning ================= */
   var PLAN = [
     { n:"Chapitre 1", title:"Aérodynamique, aérostatique et principes du vol", month:"Septembre 2026", parts:[
       { p:"Partie 1 · Aérodynamique", items:["Comment vole un avion ?","Étude de la polaire","Caractéristiques d’une voilure"] },
@@ -339,7 +332,6 @@
       { p:"Partie 4 · La conquête de l’espace", items:["Les précurseurs","De Spoutnik à Apollo","De Skylab à l’ISS"] }
     ]}
   ];
-
   var PHASE2 = [
     { t:"Chapitre 1 — Aérodynamique", d:"semaine du 16 février 2027" },
     { t:"Chapitre 2 — Aéronefs", d:"semaine du 23 février 2027" },
@@ -349,7 +341,6 @@
     { t:"Reprise des QCM ratés + fiches des points faibles", d:"30 mars – 12 avril 2027", single:true }
   ];
   var P2SUB = ["Relu","Fiches","QCM"];
-
   var PHASE3 = [
     { t:"Annale blanche nº 1", d:"semaine du 13 avril 2027", score:true },
     { t:"Annale blanche nº 2", d:"semaine du 20 avril 2027", score:true },
@@ -359,237 +350,848 @@
     { t:"Relecture finale des fiches (3 derniers jours, rien de neuf)", d:"15 – 18 mai 2027" }
   ];
 
-  /* ---------------- state ---------------- */
+  /* ================= DATA : schedule curve (Lecture 1) ================= */
+  // [date, cumul sections lues] — objectif du planning
+  var CURVE = [
+    [new Date(2026,8,1), 0],
+    [new Date(2026,8,30), 13],
+    [new Date(2026,9,31), 24],
+    [new Date(2026,10,30), 32],
+    [new Date(2026,11,31), 42],
+    [new Date(2027,0,31), 55],
+    [new Date(2027,1,10), 65]
+  ];
+  var SEC_TOTAL = 65;
+
+  var VAC = [
+    [new Date(2026,9,17), new Date(2026,10,2), "Vacances de la Toussaint"],
+    [new Date(2026,11,19), new Date(2027,0,4), "Vacances de Noël"]
+  ];
+
+  function d0(dt){ return new Date(dt.getFullYear(),dt.getMonth(),dt.getDate()); }
+  function dayMs(){ return 86400000; }
+  function daysBetween(a,b){ return Math.round((d0(b)-d0(a))/dayMs()); }
+
+  function expectedSections(dt){
+    var t = d0(dt).getTime();
+    if (t <= CURVE[0][0].getTime()) return 0;
+    if (t >= CURVE[CURVE.length-1][0].getTime()) return SEC_TOTAL;
+    for (var i=1;i<CURVE.length;i++){
+      var a=CURVE[i-1], b=CURVE[i];
+      if (t <= b[0].getTime()){
+        var f=(t-a[0].getTime())/(b[0].getTime()-a[0].getTime());
+        return a[1] + f*(b[1]-a[1]);
+      }
+    }
+    return SEC_TOTAL;
+  }
+  function slopePerDay(dt){
+    var t=d0(dt).getTime();
+    var seg0=CURVE[0], seg1=CURVE[1];
+    if (t < CURVE[0][0].getTime()){ seg0=CURVE[0]; seg1=CURVE[1]; }
+    else {
+      for (var i=1;i<CURVE.length;i++){
+        if (t <= CURVE[i][0].getTime()){ seg0=CURVE[i-1]; seg1=CURVE[i]; break; }
+        seg0=CURVE[i-1]; seg1=CURVE[i];
+      }
+    }
+    var days=(seg1[0].getTime()-seg0[0].getTime())/dayMs();
+    return (seg1[1]-seg0[1])/Math.max(days,1);
+  }
+
+  /* ================= DATA : QCM (5 épreuves) ================= */
+  var QCM = [
+    { id:"meteo", exam:"Épreuve 1", manuel:"Manuel · chapitre 3", nav:"Météo",
+      title:"Météorologie et aérologie",
+      intro:"L’épreuve la plus dense. Elle mélange du par-cœur (atmosphère standard, composition de l’air, nuages, vents) et de la compréhension (fronts, stabilité, point de rosée). Beaucoup de questions partent d’une photo ou d’une carte.",
+      fiche:[
+        "Atmosphère standard (ISA) : <span class='num'>15 °C</span> et <span class='num'>1013,25 hPa</span> au niveau de la mer ; masse volumique <span class='num'>1,225 kg/m³</span>",
+        "Gradient thermique standard : <span class='num'>−6,5 °C / 1000 m</span> ≈ <span class='num'>−2 °C / 1000 ft</span>",
+        "Tropopause : vers <span class='num'>11 km</span> (~36 000 ft), environ <span class='num'>−56 °C</span>",
+        "Air sec : <span class='num'>78 %</span> d’azote (N₂), <span class='num'>21 %</span> d’oxygène (O₂), <span class='num'>1 %</span> d’autres gaz",
+        "Brouillard : visibilité <b>&lt; 1 km</b> · brume : 1 à 5 km",
+        "Étages : bas (<b>strato-</b>/<b>cumulo-</b>), moyen (<b>alto-</b>), haut (<b>cirro-</b>)",
+        "Hémisphère nord : dépression = <b>anti-horaire</b>, air convergent, mauvais temps · anticyclone = <b>horaire</b>, beau temps",
+        "Point de rosée : température de saturation. Écart température / point de rosée faible → risque de brouillard et nuages bas"
+      ],
+      pieges:[
+        "<b>Isobares</b> (pression) ≠ <b>isohypses</b> (altitude d’une surface de pression) ≠ <b>isogones</b> (déclinaison) ≠ <b>isothermes</b> (température)",
+        "En météo, un « front » est une limite entre deux masses d’air — pas une collision entre avions",
+        "<b>Cumulus</b> = beau temps, thermiques, vol à voile · <b>Cumulonimbus</b> = orage, tous les dangers",
+        "Le point de rosée est une <b>température</b>, pas « l’heure où la rosée se dépose »",
+        "Brise de mer = l’<b>après-midi</b> · brise de terre = la nuit"
+      ],
+      questions:[
+        {q:"En atmosphère standard (ISA), la température et la pression au niveau de la mer sont :",o:["0 °C et 1013 hPa","15 °C et 1013,25 hPa","15 °C et 1225 hPa","20 °C et 1000 hPa"],c:1,w:"Valeurs ISA de référence. Le gradient de température vaut ensuite environ −2 °C par 1000 ft."},
+        {q:"En atmosphère standard, quelle est la température vers 10 000 ft ?",o:["+5 °C","0 °C","−5 °C","−15 °C"],c:2,w:"Calcul : 15 − (2 × 10) = −5 °C, avec le gradient de −2 °C / 1000 ft."},
+        {q:"Une carte indique l’isotherme 0 °C au FL80. En atmosphère standard, à quelle température volez-vous au FL60 ?",o:["−4 °C","−2 °C","+2 °C","+4 °C"],c:3,w:"2000 ft plus bas → +2 °C par 1000 ft × 2 = +4 °C."},
+        {q:"Les deux principaux constituants de l’air sec sont :",o:["l’oxygène et le gaz carbonique","l’azote et l’oxygène","l’azote et l’hélium","l’oxygène et l’hydrogène"],c:1,w:"Environ 78 % de diazote (N₂), 21 % de dioxygène (O₂), 1 % d’autres gaz."},
+        {q:"La tranche d’atmosphère située entre la troposphère et la stratosphère s’appelle :",o:["la tropopause","la stratopause","la mésosphère","la planisphère"],c:0,w:"Vers 11 km ; c’est là que la température cesse de diminuer avec l’altitude."},
+        {q:"Dans l’hémisphère nord, autour d’une dépression, le vent tourne :",o:["dans le sens horaire, en s’écartant du centre","dans le sens anti-horaire, en se dirigeant vers le centre","dans le sens horaire, vers le centre","il n’y a pas de vent dans une dépression"],c:1,w:"Dépression = convergence + air qui monte = mauvais temps. L’anticyclone fait l’inverse."},
+        {q:"On parle de brouillard lorsque la visibilité horizontale devient inférieure à :",o:["200 m","1 km","5 km","10 km"],c:1,w:"Entre 1 et 5 km, on parle de brume."},
+        {q:"Le nuage qui peut à lui seul provoquer grêle, givrage, fort cisaillement de vent, turbulence sévère et foudre est :",o:["le nimbostratus","le stratus","le cumulonimbus","le cirrostratus"],c:2,w:"Reconnaissable à son sommet en enclume. On le contourne largement."},
+        {q:"Le point de rosée est :",o:["l’endroit où sont mesurées les données météo de l’aérodrome","la température à laquelle l’air atteint la saturation, à pression constante","l’heure à laquelle la rosée se dépose au sol","la température de la piste au lever du jour"],c:1,w:"Plus l’écart entre la température de l’air et le point de rosée est faible, plus le risque de brouillard est élevé."},
+        {q:"Lors du passage d’une perturbation, après l’air froid antérieur, un observateur au sol voit se succéder :",o:["le front froid, le secteur chaud, le front chaud, la traîne","le front chaud, le secteur chaud, le front froid, puis la traîne","la traîne, le front froid, le secteur chaud, le front chaud","le secteur chaud, la traîne, le front chaud, le front froid"],c:1,w:"Front chaud (nuages qui s’abaissent, pluie), air doux, front froid (averses), puis traîne."},
+        {q:"Une occlusion correspond à :",o:["une zone de très hautes pressions","un ciel toujours dégagé","un front chaud rattrapé par un front froid : zone très nuageuse et pluvieuse, plafond bas","l’œil d’un cyclone tropical"],c:2,w:"Le secteur chaud est soulevé et « pincé » entre les deux fronts qui se rejoignent."},
+        {q:"Le mistral est un vent :",o:["de sud qui souffle sur Marseille","de nord à nord-ouest qui descend la vallée du Rhône","d’est qui souffle sur la Corse","de sud-ouest qui souffle sur le Languedoc"],c:1,w:"La tramontane, elle, souffle du nord-ouest entre les Pyrénées et le Massif central."},
+        {q:"La brise de mer :",o:["est la plus forte tôt le matin","est la plus forte en milieu / fin d’après-midi","souffle de la terre vers la mer","ne se produit qu’en hiver"],c:1,w:"L’après-midi, le sol chaud aspire l’air frais de la mer. La nuit : brise de terre."},
+        {q:"Sur une carte météo, les lignes qui joignent les points de même pression sont :",o:["les isohypses","les isogones","les isobares","les isothermes"],c:2,w:"Isogones = même déclinaison ; isothermes = même température ; isohypses = même altitude d’une surface de pression."},
+        {q:"Une « trouée de foehn » est :",o:["un trou dans la couche d’ozone","une zone de ciel clair sous le vent d’un relief, l’air s’étant asséché en redescendant","une descente rapide d’air froid derrière un front","un vent régional des Pyrénées"],c:1,w:"L’air perd son humidité en montant au vent du relief, puis se réchauffe et s’assèche en redescendant."},
+        {q:"Un givrage important sur la cellule d’un avion a notamment pour effet :",o:["un gain d’altitude","une altération des profils aérodynamiques et une perte de portance","une baisse de la traînée","une amélioration des performances"],c:1,w:"La glace déforme le profil, alourdit l’avion et peut bloquer des gouvernes."}
+      ]
+    },
+    { id:"aero", exam:"Épreuve 2", manuel:"Manuel · chapitre 1", nav:"Aérodynamique",
+      title:"Aérodynamique, aérostatique et principes du vol",
+      intro:"Surtout des définitions précises (portance, traînée, vent relatif, incidence, facteur de charge) et l’équilibre des forces en vol. Quelques calculs simples : portance ∝ vitesse², plané d’un planeur, facteur de charge en virage.",
+      fiche:[
+        "<b>Portance</b> : perpendiculaire au vent relatif · <b>Traînée</b> : parallèle au vent relatif, de même sens",
+        "Vol en palier stabilisé : <b>Portance = Poids</b> et <b>Traction = Traînée</b>",
+        "Portance ∝ vitesse² : vitesse × 3 → portance × <span class='num'>9</span>",
+        "Facteur de charge n = Portance / Poids · en virage : n = 1/cos(inclinaison) → <span class='num'>60° : n = 2</span>",
+        "Le décrochage arrive toujours à la <b>même incidence</b> (~15°). La vitesse de décrochage augmente avec la masse et le facteur de charge",
+        "Sustentation = <b>dépression</b> à l’extrados + <b>surpression</b> à l’intrados",
+        "Axes : roulis → ailerons (manche G/D) · tangage → profondeur (manche AV/AR) · lacet → direction (palonnier)",
+        "Hélice : <b>petit pas</b> au décollage · <b>grand pas</b> en croisière. Centrage avant → stable mais peu maniable",
+        "Montgolfière = <b>aérostat</b> · finesse f = distance parcourue / hauteur perdue"
+      ],
+      pieges:[
+        "La portance est perpendiculaire au <b>vent relatif</b> — pas à la corde, pas à l’horizontale",
+        "Le décrochage se produit à incidence constante, <b>pas</b> à vitesse constante",
+        "Les hypersustentateurs <b>augmentent</b> portance et traînée et <b>abaissent</b> la vitesse de décrochage — ils ne font pas aller plus vite",
+        "Le vent relatif est parallèle à la trajectoire mais de <b>sens opposé</b> au déplacement",
+        "Les winglets réduisent la traînée <b>induite</b> (tourbillons de bout d’aile)"
+      ],
+      questions:[
+        {q:"La portance est la composante de la résultante aérodynamique :",o:["parallèle à la corde du profil","perpendiculaire au vent relatif","parallèle au vent relatif","perpendiculaire à l’axe du fuselage"],c:1,w:"La traînée, elle, est parallèle au vent relatif et de même sens."},
+        {q:"En vol en palier rectiligne et stabilisé :",o:["la portance équilibre la traînée","la portance est un peu inférieure au poids","la portance équilibre le poids","la traction équilibre le poids"],c:2,w:"Deux équilibres : Portance = Poids et Traction = Traînée."},
+        {q:"Le vent relatif est :",o:["indépendant de la trajectoire de l’avion","parallèle à la trajectoire et de même sens que le déplacement","parallèle à la trajectoire et de sens opposé au déplacement","toujours horizontal"],c:2,w:"C’est le vent que « ressent » l’avion du fait de son propre déplacement."},
+        {q:"Le décrochage d’une aile se produit toujours à la même :",o:["vitesse","incidence","assiette","inclinaison"],c:1,w:"Autour de 15°. La vitesse de décrochage, elle, dépend de la masse et du facteur de charge."},
+        {q:"Si la vitesse du vent relatif est multipliée par 3, la portance est :",o:["multipliée par 3","multipliée par 6","multipliée par 9","inchangée"],c:2,w:"La portance est proportionnelle au carré de la vitesse : 3² = 9."},
+        {q:"Le facteur de charge est le rapport :",o:["portance / poids","poids / traînée","traînée / portance","masse / surface des ailes"],c:0,w:"Il vaut 1 en palier, 2 en virage à 60° d’inclinaison."},
+        {q:"En virage symétrique en palier, quand l’inclinaison augmente, le facteur de charge :",o:["ne change pas","augmente","diminue","dépend seulement de la vitesse"],c:1,w:"n = 1/cos(inclinaison). Et quand n augmente, la vitesse de décrochage augmente aussi."},
+        {q:"Les dispositifs hypersustentateurs (volets, becs) servent à :",o:["augmenter la vitesse en croisière","abaisser la vitesse de décrochage au décollage et à l’atterrissage","réduire la traînée","augmenter la vitesse de décrochage"],c:1,w:"Ils augmentent la portance (et la traînée) à basse vitesse."},
+        {q:"Pour faire tourner l’avion autour de l’axe de tangage, le pilote agit sur :",o:["les ailerons, en inclinant le manche à gauche ou à droite","la gouverne de profondeur, en poussant ou tirant le manche","la gouverne de direction, avec le palonnier","le compensateur uniquement"],c:1,w:"Roulis = ailerons (manche latéral) ; lacet = direction (palonnier)."},
+        {q:"La portance de l’aile résulte de l’apparition :",o:["d’une surpression à l’extrados et d’une dépression à l’intrados","d’une dépression à l’extrados et d’une surpression à l’intrados","d’une dépression des deux côtés","d’une surpression des deux côtés"],c:1,w:"L’air circule plus vite sur l’extrados, donc la pression y est plus faible."},
+        {q:"Les winglets en bout d’aile ont pour rôle principal de :",o:["augmenter la portance maximale","diminuer la traînée induite","augmenter la vitesse de décrochage","améliorer la stabilité en lacet"],c:1,w:"Ils limitent les tourbillons marginaux créés par le contournement du bout d’aile."},
+        {q:"Un centrage avant rend l’avion :",o:["plus stable mais moins maniable","moins stable et moins maniable","plus stable et plus maniable","moins stable mais plus maniable"],c:0,w:"Un centrage arrière augmente la maniabilité mais devient vite dangereux."},
+        {q:"Une montgolfière :",o:["fait partie des aérodynes","s’élève parce que l’air chaud est moins dense que l’air froid","monte quand on refroidit l’air de l’enveloppe","se dirige avec une gouverne de profondeur"],c:1,w:"C’est un aérostat « plus léger que l’air ». On ne la dirige qu’en changeant d’altitude."},
+        {q:"Un planeur de finesse 40, situé 1000 m au-dessus de son terrain, sans vent :",o:["peut parcourir environ 4 km","peut parcourir environ 40 km","ne peut pas planer sans moteur","descend à la verticale"],c:1,w:"Finesse 40 = 40 km parcourus pour 1000 m de hauteur perdue."},
+        {q:"Vu du sol, la trajectoire d’une fusée lancée de Floride s’incurve vers l’est car :",o:["c’est une illusion d’optique due aux gaz chauds","on profite de la vitesse de rotation de la Terre (d’ouest en est) pour la mise en orbite","cela préserve la couche d’ozone","les moteurs poussent volontairement de travers"],c:1,w:"La Terre tourne vers l’est : lancer dans ce sens « offre » déjà plusieurs centaines de m/s."},
+        {q:"L’orbite d’un satellite géostationnaire est :",o:["circulaire, dans le plan de l’équateur","elliptique, dans un plan perpendiculaire à l’équateur","elliptique, avec la Lune comme foyer","circulaire, inclinée à 45°"],c:0,w:"Période de 24 h à environ 36 000 km d’altitude : le satellite reste au-dessus du même point."}
+      ]
+    },
+    { id:"aeronefs", exam:"Épreuve 3", manuel:"Manuel · chapitre 2", nav:"Aéronefs",
+      title:"Étude des aéronefs et des engins spatiaux",
+      intro:"Du vocabulaire technique : classification des aéronefs, pièces de la cellule, gouvernes, trains, moteur à pistons 4 temps, turbomachines, instruments de bord. Souvent une figure à légender.",
+      fiche:[
+        "<b>Aérostat</b> = plus léger que l’air (ballon, dirigeable) · <b>aérodyne</b> = plus lourd (avion, planeur, hélico, deltaplane)",
+        "<b>Longerons</b> : pièces longitudinales de l’aile, reprennent la flexion · <b>nervures</b> : donnent le profil · <b>cadres/couples</b> : les « nervures » du fuselage",
+        "Train <b>classique</b> = principal + roulette de queue · train <b>tricycle</b> = principal + roulette de nez",
+        "Moteur 4 temps : <b>Admission → Compression → Combustion-détente → Échappement</b>",
+        "Double allumage : <b>2 bougies par cylindre</b> → un 4-cylindres en a <span class='num'>8</span>",
+        "Hélice : <b>petit pas</b> au décollage, <b>grand pas</b> en croisière",
+        "<b>Anémomètre</b> : pression totale − statique · <b>altimètre</b> et <b>variomètre</b> : pression statique",
+        "<b>Horizon artificiel</b> (gyroscope) : assiette + inclinaison · la <b>bille</b> : symétrie du vol",
+        "<b>Turbopropulseur</b> = turboréacteur + réducteur + hélice · réchauffage carburateur = contre le givrage"
+      ],
+      pieges:[
+        "Montgolfière / dirigeable = aérostat ; <b>deltaplane</b> = aérodyne",
+        "Le temps qui fournit l’énergie = la <b>combustion-détente</b>, pas l’admission",
+        "Les efforts principaux de l’aile passent par les <b>longerons</b>, pas par les lisses",
+        "<b>Grand pas</b> d’hélice = croisière (et non décollage)",
+        "L’horizon artificiel donne assiette + inclinaison ; l’altitude, c’est l’altimètre"
+      ],
+      questions:[
+        {q:"Un aérostat est un engin :",o:["plus lourd que l’air","plus léger que l’air","toujours motorisé","à voilure tournante"],c:1,w:"Ballons et dirigeables. Avions, planeurs, hélicoptères et deltaplanes sont des aérodynes."},
+        {q:"Quel aéronef change de trajectoire en déplaçant le centre de gravité du pilote ?",o:["l’avion et le planeur","le deltaplane et l’ULM pendulaire","l’hélicoptère et l’autogire","le paramoteur uniquement"],c:1,w:"Le pilote agit sur une barre reliée directement à l’aile."},
+        {q:"Dans une aile, les pièces disposées dans le sens de l’envergure et qui reprennent l’essentiel des efforts sont :",o:["les nervures","les lisses","les longerons","les raidisseurs"],c:2,w:"Les nervures, elles, donnent au profil sa forme."},
+        {q:"Un train d’atterrissage « classique » comprend :",o:["un train principal et une roulette de nez","un train principal et une roulette de queue","deux roues seulement","un train sur un seul axe et deux balancines"],c:1,w:"Le train « tricycle » possède une roulette de nez."},
+        {q:"Dans un moteur à 4 temps, le temps qui fournit l’énergie est :",o:["l’admission","la compression","la combustion-détente","l’échappement"],c:2,w:"Cycle complet : admission, compression, combustion-détente, échappement."},
+        {q:"Un moteur d’avion léger à 4 cylindres possède, avec son double allumage, un total de :",o:["2 bougies","4 bougies","8 bougies","aucune bougie"],c:2,w:"2 bougies par cylindre : plus de sécurité et une meilleure combustion."},
+        {q:"Sur un avion à hélice à pas variable, le grand pas est utilisé :",o:["au décollage","en vol de croisière","à l’atterrissage","au point fixe"],c:1,w:"Petit pas au décollage (régime élevé, forte traction), grand pas en croisière."},
+        {q:"Le réchauffage carburateur sert à :",o:["faciliter le démarrage à froid","lutter contre la formation de glace dans le carburateur","augmenter la puissance maximale","refroidir le moteur en été"],c:1,w:"La détente de l’air et l’évaporation de l’essence refroidissent fortement : du givre peut se former même par temps doux."},
+        {q:"Un turbopropulseur est :",o:["un moteur à pistons avec turbocompresseur","un turboréacteur précédé d’un réducteur qui entraîne une hélice","un statoréacteur muni d’une hélice","un pulsoréacteur muni d’une hélice"],c:1,w:"On récupère la puissance de la turbine pour faire tourner une hélice."},
+        {q:"Parmi ces instruments, celui qui utilise un gyroscope est :",o:["l’altimètre","l’anémomètre","l’horizon artificiel","le compas magnétique"],c:2,w:"Il indique l’assiette (à cabrer / à piquer) et l’inclinaison de l’avion."},
+        {q:"Pour mesurer l’altitude, l’altimètre utilise :",o:["la pression totale","la pression dynamique","la pression statique","la différence entre pression totale et pression dynamique"],c:2,w:"L’anémomètre, lui, utilise la différence pression totale − pression statique."},
+        {q:"Le rotor anticouple d’un hélicoptère permet de contrôler :",o:["la rotation autour de l’axe de lacet","la rotation autour de l’axe de tangage","la vitesse verticale","la rotation autour de l’axe de roulis"],c:0,w:"Il compense le couple du rotor principal ; le pilote le dose au palonnier."},
+        {q:"Un empennage dit « canard » est :",o:["situé à l’avant de l’avion","un empennage en forme de V","placé en bout d’aile","une double dérive"],c:0,w:"Cette surface avant est calculée pour décrocher avant l’aile principale."},
+        {q:"Un aéronef dont le rotor est entraîné par le seul vent relatif en croisière est :",o:["un hélicoptère","un autogire","un convertible","un girodyne"],c:1,w:"Le rotor tourne en autorotation ; la propulsion vient d’une hélice classique."},
+        {q:"La bille (dans l’indicateur de virage) renseigne le pilote sur :",o:["son altitude","la symétrie de son vol (dérapage ou glissade)","sa vitesse","son cap"],c:1,w:"Bille centrée = vol symétrique."}
+      ]
+    },
+    { id:"nav", exam:"Épreuve 4", manuel:"Manuel · chapitre 4", nav:"Navigation",
+      title:"Navigation, réglementation, sécurité des vols",
+      intro:"Trois blocs : la navigation (temps, repérage, cap/route, déclinaison, échelle de carte), la réglementation (espaces, règles de l’air, priorités, radio, transpondeur) et les facteurs humains.",
+      fiche:[
+        "1 mille nautique (NM) = <span class='num'>1,852 km</span> · carte OACI au 1/500 000 : <b>1 cm = 5 km</b>",
+        "Fréquence de détresse : <span class='num'>121,5 MHz</span> · message : <b>MAYDAY</b> (× 3)",
+        "Transpondeur : <span class='num'>7500</span> détournement · <span class='num'>7600</span> panne radio · <span class='num'>7700</span> détresse",
+        "<b>Déclinaison</b> = angle nord vrai / nord magnétique · <b>déviation</b> = erreur propre au compas de l’avion",
+        "Route vraie → route magnétique : déclinaison <b>Est on retranche</b>, <b>Ouest on ajoute</b>",
+        "Semi-circulaire VFR : <b>000→179°</b> niveaux impairs + 500 ft (FL35, 55, 75…) · <b>180→359°</b> pairs + 500 ft",
+        "Nuit aéronautique (France métro) : commence <b>30 min après</b> le coucher du soleil, finit 30 min avant le lever",
+        "Classe A = <b>interdite au VFR</b> · classe G = non contrôlé · rapprochement de face → chacun dégage <b>par la droite</b>",
+        "Numéro de piste = orientation magnétique ÷ 10 (piste au 070° → « 07 »)"
+      ],
+      pieges:[
+        "Déclinaison ≠ déviation ≠ inclinaison magnétique ≠ dérive",
+        "Une piste au 070° porte le marquage « <b>07</b> » (deux chiffres), pas « 70 »",
+        "Nuit aéronautique = 30 min <b>après</b> le coucher — pas au coucher, pas 1 h avant",
+        "Classe A = interdite au VFR, pas « VFR sous conditions »",
+        "MAYDAY (× 3) pour la détresse ; PAN-PAN pour l’urgence",
+        "La visite prévol se fait <b>avant chaque vol</b> par le commandant de bord"
+      ],
+      questions:[
+        {q:"1 mille nautique (NM) vaut :",o:["1000 m","1609 m","1852 m","exactement 2 km"],c:2,w:"Il correspond à 1 minute d’arc de méridien. 10 NM = 18,52 km."},
+        {q:"Sur une carte OACI au 1/500 000, une distance mesurée de 9 cm représente :",o:["4,5 km","9 km","45 km","90 km"],c:2,w:"1 cm = 5 km, donc 9 × 5 = 45 km."},
+        {q:"L’angle entre le nord géographique (vrai) et le nord magnétique s’appelle :",o:["la déviation","la déclinaison magnétique","la dérive","l’inclinaison magnétique"],c:1,w:"La déviation, elle, est l’erreur propre au compas de l’avion."},
+        {q:"Votre route vraie est 330°, la déclinaison magnétique est de 2°E. Votre route magnétique est :",o:["328°","330°","332°","032°"],c:0,w:"Déclinaison Est : on retranche. 330 − 2 = 328°."},
+        {q:"La fréquence radio de détresse est :",o:["121,5 MHz","122,5 MHz","123,45 MHz","130,0 MHz"],c:0,w:"Le message de détresse est « MAYDAY » répété trois fois."},
+        {q:"Le code transpondeur à afficher en cas de panne de radio est :",o:["7500","7600","7700","2000"],c:1,w:"7500 = intervention illicite (détournement), 7700 = détresse."},
+        {q:"Un espace aérien de classe A est :",o:["autorisé au VFR","autorisé au VFR sous certaines conditions","interdit au VFR","interdit à l’IFR"],c:2,w:"Seuls les vols IFR y sont admis."},
+        {q:"En VFR, deux avions se font face. Pour éviter la collision :",o:["les deux virent à gauche","chacun vire à droite","celui du dessous descend, l’autre monte","ils attendent les instructions du contrôle"],c:1,w:"Règle de l’air : dégagement par la droite."},
+        {q:"En France métropolitaine, la nuit aéronautique commence :",o:["à l’heure du coucher du soleil","30 minutes après le coucher du soleil","1 heure après le coucher du soleil","30 minutes avant le coucher du soleil"],c:1,w:"Et elle se termine 30 minutes avant le lever du soleil."},
+        {q:"Le contrôleur vous demande d’utiliser « la piste de gauche orientée au 070° ». Son marquage au sol est :",o:["70 L","07 L","07 R","70 R"],c:1,w:"Numéro = orientation magnétique ÷ 10 arrondie ; « L » = left, la piste de gauche."},
+        {q:"Un NOTAM est :",o:["un message signalant l’état, une modification ou un danger concernant une installation, un service ou une procédure","une zone militaire interdite","les conditions météo minimales pour voler en VFR","le manuel de vol de l’avion"],c:0,w:"De l’anglais « Notice To Air Missions »."},
+        {q:"Le siège de l’Organisation de l’aviation civile internationale (OACI) est à :",o:["Paris","Montréal","Cologne","Genève"],c:1,w:"L’EASA (sécurité aérienne européenne), elle, est à Cologne."},
+        {q:"Un avion de ligne vole à la vitesse propre de 900 km/h avec un jet-stream de 300 km/h dans le dos. Sa vitesse sol est :",o:["600 km/h","900 km/h","1200 km/h","300 km/h"],c:2,w:"Vent arrière : on additionne (900 + 300). Vent de face : on soustrait."},
+        {q:"Le modèle de James Reason, qui explique l’accident par l’alignement de plusieurs failles, est représenté par :",o:["des triangles","des plaques (de fromage) trouées","des sphères","des dominos"],c:1,w:"Chaque plaque est une barrière de sécurité ; l’accident survient quand les trous s’alignent."},
+        {q:"La visite prévol d’un aéronef est effectuée :",o:["une fois par jour par le mécanicien","systématiquement par le commandant de bord avant chaque vol","seulement après une réparation","une fois par semaine"],c:1,w:"C’est une responsabilité du commandant de bord."},
+        {q:"Combien existe-t-il de classes d’ULM ?",o:["4","5","6","7"],c:2,w:"Paramoteur, pendulaire, multiaxe, autogire, aérostat ULM, hélicoptère ULM."},
+        {q:"En VFR, avec une route magnétique de 090°, quel niveau de vol respecte la règle semi-circulaire ?",o:["FL60","FL65","FL70","FL75"],c:3,w:"Route 000→179° : niveau impair + 500 ft (FL35, 55, 75…). Seul FL75 convient ici."}
+      ]
+    },
+    { id:"histoire", exam:"Épreuve 5", manuel:"Manuel · chapitre 5", nav:"Histoire",
+      title:"Histoire et culture de l’aéronautique et du spatial",
+      intro:"La plus accessible si on a appris les dates et les noms. Pionniers, deux guerres mondiales, mur du son, aviation commerciale, conquête spatiale, industriels français.",
+      fiche:[
+        "<span class='num'>1783</span> : premier vol humain en ballon à air chaud (frères Montgolfier)",
+        "<span class='num'>1890</span> : Clément Ader quitte le sol avec « Éole » · <span class='num'>1903</span> : premier vol contrôlé et motorisé (frères Wright)",
+        "<span class='num'>1909</span> : Blériot traverse la Manche · <span class='num'>1927</span> : Lindbergh traverse l’Atlantique en solitaire",
+        "<b>14 octobre 1947</b> : mur du son franchi — Chuck Yeager, Bell X-1",
+        "<span class='num'>1957</span> : Spoutnik 1 · <span class='num'>1961</span> : Gagarine, 1er homme dans l’espace · <span class='num'>1965</span> : Leonov, 1re sortie extravéhiculaire",
+        "<span class='num'>1969</span> : Armstrong marche sur la Lune (Apollo 11) · 1er vol du Concorde",
+        "<span class='num'>1987-88</span> : Airbus A320, 1er avion civil à commandes de vol électriques",
+        "<span class='num'>2005</span> : 1er vol de l’A380 · Patrouille de France créée en <span class='num'>1953</span>, basée à Salon-de-Provence",
+        "Air France créée en <span class='num'>1933</span> · le Boeing 747 a lancé le transport aérien de masse"
+      ],
+      pieges:[
+        "Wright = premier vol <b>contrôlé et motorisé</b> (1903) ; mais Ader avait décollé dès 1890",
+        "Bataille d’Angleterre : gagnée grâce au <b>radar</b> — pas au blindage ni à Enigma",
+        "« Un petit pas pour l’homme… » = <b>Armstrong</b> (Apollo 11), pas Gagarine",
+        "Le 747 a démocratisé le voyage aérien ; le Concorde était supersonique mais transportait peu de passagers",
+        "Voyager 1 : lancée en 1977, sortie du système solaire (héliopause) en 2012"
+      ],
+      questions:[
+        {q:"Le premier vol humain en ballon à air chaud (1783) est l’œuvre des frères :",o:["Wright","Montgolfier","Voisin","Caudron"],c:1,w:"Le premier vol libre habité a eu lieu au-dessus de Paris."},
+        {q:"Le premier vol contrôlé d’un plus lourd que l’air motorisé (1903) est réalisé par :",o:["Clément Ader","Louis Blériot","les frères Wright","Otto Lilienthal"],c:2,w:"Ader avait quitté le sol dès 1890 avec « Éole », mais sans vol réellement contrôlé."},
+        {q:"En 1909, Louis Blériot est le premier à traverser en avion :",o:["la Méditerranée","la Manche","l’Atlantique","les Alpes"],c:1,w:"Roland Garros traversera la Méditerranée en 1913."},
+        {q:"Le mur du son a été franchi pour la première fois en :",o:["1937","1947","1957","1967"],c:1,w:"Par Chuck Yeager, à bord de l’avion-fusée Bell X-1."},
+        {q:"La bataille d’Angleterre (1940) a été gagnée par les Britanniques grâce surtout :",o:["au blindage des Spitfire","au radar","à la synchronisation mitrailleuse / hélice","au décryptage d’Enigma"],c:1,w:"Le radar permettait de détecter les raids allemands et d’envoyer les chasseurs au bon endroit."},
+        {q:"Les avions qui se sont affrontés pendant la Seconde Guerre mondiale sont :",o:["le SPAD XIII et le Fokker","le Spitfire et le Messerschmitt Bf 109","le Rafale et le MiG-21","le Hurricane et le Mirage"],c:1,w:"SPAD et Fokker, c’est la Première Guerre mondiale."},
+        {q:"La phrase « C’est un petit pas pour l’homme, un bond de géant pour l’humanité » a été prononcée par :",o:["Youri Gagarine","Neil Armstrong, lors du premier pas sur la Lune","André Turcat, au premier vol du Concorde","Thomas Pesquet"],c:1,w:"Mission Apollo 11, juillet 1969."},
+        {q:"Le premier homme dans l’espace (1961) est :",o:["Neil Armstrong","Alexeï Leonov","Youri Gagarine","John Glenn"],c:2,w:"À bord de Vostok 1. Valentina Terechkova sera la première femme, en 1963."},
+        {q:"La première sortie extravéhiculaire (« marche dans l’espace », 1965) a été réalisée par :",o:["Alexeï Leonov","Youri Gagarine","Claudie Haigneré","Buzz Aldrin"],c:0,w:"Cosmonaute soviétique, mission Voskhod 2."},
+        {q:"Le premier avion civil entièrement équipé de commandes de vol électriques est :",o:["la Caravelle","le Concorde","l’Airbus A320","le Boeing 737"],c:2,w:"Mis en service à la fin des années 1980 ; le pilote agit sur un mini-manche latéral."},
+        {q:"Parmi ces avions à réaction, celui qui a lancé le transport aérien de masse est :",o:["le Concorde","le Boeing 747","l’Airbus Beluga","le Bourget"],c:1,w:"Le « Jumbo Jet » (1970) a fait chuter le prix du billet grâce à sa très grande capacité."},
+        {q:"La sonde Rosetta (lancée en 2004, arrivée en 2014) avait pour objectif :",o:["d’observer les éruptions solaires","de poser un atterrisseur (Philae) sur une comète pour l’analyser","de préparer un voyage habité vers Mars","d’emporter des messages pour d’éventuelles civilisations"],c:1,w:"La comète 67P (« Tchouri »). Emporter des messages, c’était la mission des sondes Voyager."},
+        {q:"Marcel Dassault s’est d’abord fait connaître, sous le nom de Marcel Bloch, en concevant :",o:["un moteur en étoile","une hélice à haut rendement (« Éclair »)","le premier siège éjectable","un train d’atterrissage rentrant"],c:1,w:"Pendant la Première Guerre mondiale ; cette hélice équipera de nombreux avions français."},
+        {q:"La Patrouille de France est basée à :",o:["Salon-de-Provence","Le Bourget","Istres","Étampes"],c:0,w:"Elle a été officiellement créée en 1953."},
+        {q:"En 1977, la NASA lance les deux sondes Voyager pour :",o:["préparer le programme Apollo","explorer les planètes externes du système solaire","photographier Mars avant l’envoi de robots","emmener des touristes en orbite"],c:1,w:"Voyager 1 a franchi l’héliopause, limite du système solaire, en 2012."},
+        {q:"En 1921, l’aviatrice Adrienne Bolland est la première à survoler :",o:["la cordillère des Andes","l’Atlantique Sud","le pôle Nord","le Sahara"],c:0,w:"Une traversée très risquée avec un avion peu puissant."}
+      ]
+    }
+  ];
+  var LETTERS = ["A","B","C","D"];
+
+  /* ================= STATE ================= */
   var state = load();
   function load(){
-    try{ var s = JSON.parse(localStorage.getItem(KEY)); if(s && typeof s==="object") return s; }catch(e){}
-    return { sec:{}, weak:{}, p2:{}, p3:{}, score:{}, open:{}, theme:"auto" };
+    try{ var s=JSON.parse(localStorage.getItem(KEY)); if(s&&typeof s==="object"){
+      s.sec=s.sec||{}; s.weak=s.weak||{}; s.p2=s.p2||{}; s.p3=s.p3||{}; s.score=s.score||{};
+      s.open=s.open||{}; s.qcm=s.qcm||{}; s.theme=s.theme||"auto"; s.tab=s.tab||"planning";
+      return s;
+    }}catch(e){}
+    return { sec:{}, weak:{}, p2:{}, p3:{}, score:{}, open:{}, qcm:{}, theme:"auto", tab:"planning" };
   }
   var saveT;
   function save(){ clearTimeout(saveT); saveT=setTimeout(function(){
     try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
-  },150); }
+  },140); }
 
-  /* ---------------- helpers ---------------- */
-  function el(tag, cls, html){ var e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e; }
-  var CHECK_SVG = '<svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 4.5"/></svg>';
+  /* ================= helpers ================= */
+  function el(tag,cls,html){ var e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e; }
+  var CHECK_SVG='<svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 4.5"/></svg>';
   function secId(ci,pi,ii){ return ci+"."+pi+"."+ii; }
-
-  /* ---------------- render: phase 1 ---------------- */
-  var chapWrap = document.getElementById("chapters");
-  PLAN.forEach(function(chap, ci){
-    var card = el("div","card");
-    if(state.open[ci]) card.classList.add("open");
-
-    var head = el("div","chap-head");
-    var top = el("div","chap-head-top");
-    top.appendChild(el("span","cnum", chap.n.replace("Chapitre ","CH ")));
-    top.appendChild(el("span","ctitle", chap.title));
-    top.appendChild(el("span","chev","›"));
-    head.appendChild(top);
-    var meta = el("div","chap-head-meta");
-    meta.appendChild(el("span","cmonth", chap.month));
-    var prog = el("span","cprog","");
-    meta.appendChild(prog);
-    head.appendChild(meta);
-    head.addEventListener("click", function(){
-      card.classList.toggle("open");
-      state.open[ci] = card.classList.contains("open"); save();
-    });
-    card.appendChild(head);
-
-    var body = el("div","chap-body");
-    chap.parts.forEach(function(part, pi){
-      body.appendChild(el("div","part-label", part.p));
-      part.items.forEach(function(name, ii){
-        var id = secId(ci,pi,ii);
-        var row = el("div","row");
-        if(state.sec[id]) row.classList.add("checked");
-
-        var box = el("div","check"); box.innerHTML = CHECK_SVG;
-        box.addEventListener("click", function(){
-          state.sec[id] = !state.sec[id];
-          row.classList.toggle("checked", !!state.sec[id]);
-          save(); refresh();
-        });
-        row.appendChild(box);
-        row.appendChild(el("span","txt", name));
-
-        var flag = el("button","flag" + (state.weak[id]?" on":""), "★");
-        flag.title = "Section où je galère";
-        flag.addEventListener("click", function(){
-          state.weak[id] = !state.weak[id];
-          flag.classList.toggle("on", !!state.weak[id]);
-          save(); renderWeak();
-        });
-        row.appendChild(flag);
-        body.appendChild(row);
-      });
-    });
-    card.appendChild(body);
-    chapWrap.appendChild(card);
-
-    chap._prog = prog;
-  });
-
+  function countSec(){ var n=0; for(var k in state.sec) if(state.sec[k]) n++; return n; }
   function chapCounts(ci){
-    var chap = PLAN[ci], done=0, tot=0;
-    chap.parts.forEach(function(part,pi){ part.items.forEach(function(_,ii){
-      tot++; if(state.sec[secId(ci,pi,ii)]) done++;
-    });});
+    var chap=PLAN[ci],done=0,tot=0;
+    chap.parts.forEach(function(part,pi){ part.items.forEach(function(_,ii){ tot++; if(state.sec[secId(ci,pi,ii)]) done++; }); });
     return [done,tot];
   }
-
-  /* ---------------- render: weak points ---------------- */
-  var weaklist = document.getElementById("weaklist");
-  function renderWeak(){
-    weaklist.innerHTML="";
-    var any=false;
+  function p2Counts(){ var d=0,t=0; PHASE2.forEach(function(it,i){ if(it.single){t++;if(state.p2[i+"-0"])d++;} else P2SUB.forEach(function(_,j){t++;if(state.p2[i+"-"+j])d++;}); }); return [d,t]; }
+  function p3Counts(){ var d=0; PHASE3.forEach(function(_,i){ if(state.p3[i]) d++; }); return [d,PHASE3.length]; }
+  function weakList(){
+    var out=[];
     PLAN.forEach(function(chap,ci){ chap.parts.forEach(function(part,pi){ part.items.forEach(function(name,ii){
-      if(state.weak[secId(ci,pi,ii)]){
-        any=true;
-        weaklist.appendChild(el("li",null,"<span>"+chap.n.replace("Chapitre ","Ch. ")+" — "+name+"</span>"));
-      }
-    });});});
-    if(!any) weaklist.appendChild(el("li","empty","Rien pour l’instant. Marque les sections dures avec ★."));
+      if(state.weak[secId(ci,pi,ii)]) out.push(chap.n.replace("Chapitre ","Ch. ")+" — "+name);
+    }); }); });
+    return out;
+  }
+  function qcmPartStats(p){
+    var faites=0,justes=0;
+    p.questions.forEach(function(_,i){
+      var v=state.qcm[p.id+"."+i];
+      if(v!==undefined){ faites++; if(v===p.questions[i].c) justes++; }
+    });
+    return {faites:faites,justes:justes,total:p.questions.length};
+  }
+  function qcmGlobal(){
+    var f=0,j=0,t=0;
+    QCM.forEach(function(p){ var s=qcmPartStats(p); f+=s.faites; j+=s.justes; t+=s.total; });
+    return {faites:f,justes:j,total:t};
+  }
+  function fmtDelta(x){ return (x>0?"+":"")+x; }
+  function plur(n,s,p){ return (Math.abs(n)>1) ? (p||(s+"s")) : s; }
+  function cap(str){ return str.charAt(0).toUpperCase()+str.slice(1); }
+  function daysToExam(){ return daysBetween(new Date(), EXAM); }
+  function pad2(n){ return (n<10?"0":"")+n; }
+  var MONTHS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+  var DOWS=["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"];
+
+  function scheduleDelta(){
+    var today=new Date();
+    var actual=countSec();
+    var exp=expectedSections(today);
+    var deltaSec=Math.round(actual-exp);
+    var sl=slopePerDay(today);
+    var deltaDays = sl>0.02 ? Math.round(deltaSec/sl) : 0;
+    var phase1Done = d0(today) > CURVE[CURVE.length-1][0];
+    var beforeStart = d0(today) < CURVE[0][0];
+    return {actual:actual, exp:exp, deltaSec:deltaSec, deltaDays:deltaDays, phase1Done:phase1Done, beforeStart:beforeStart};
+  }
+  function phaseOfDate(dt){
+    var d=d0(dt), t=d.getTime();
+    if (d.getTime()===d0(EXAM).getTime()) return "exam";
+    if (t>=d0(new Date(2026,8,1)).getTime() && t<=d0(new Date(2027,1,10)).getTime()) return "p1";
+    if (t>=d0(new Date(2027,1,16)).getTime() && t<=d0(new Date(2027,3,12)).getTime()) return "p2";
+    if (t>=d0(new Date(2027,3,13)).getTime() && t<=d0(EXAM).getTime()) return "p3";
+    return "off";
+  }
+  function vacOfDate(dt){
+    var t=d0(dt).getTime();
+    for(var i=0;i<VAC.length;i++){ if(t>=d0(VAC[i][0]).getTime() && t<=d0(VAC[i][1]).getTime()) return VAC[i][2]; }
+    return null;
   }
 
-  /* ---------------- render: phase 2 ---------------- */
-  var p2wrap = document.getElementById("phase2");
-  PHASE2.forEach(function(item, i){
-    var task = el("div","task");
-    var main = el("div","tmain");
-    main.appendChild(el("div","tt", item.t));
-    main.appendChild(el("div","td", item.d));
-    if(!item.single){
-      var subs = el("div","subchecks");
-      P2SUB.forEach(function(lbl,j){
-        var k = i+"-"+j;
-        var chip = el("div","chip"+(state.p2[k]?" on":""), lbl);
-        chip.addEventListener("click", function(){
-          state.p2[k]=!state.p2[k]; chip.classList.toggle("on",!!state.p2[k]); save(); refresh();
+  /* ================= RENDER : Planning ================= */
+  function renderPlanning(host){
+    setBar("Planning", null);
+    var sd=scheduleDelta();
+    var d1=countSec();
+
+    var top=el("div","card");
+    top.style.marginBottom="16px";
+    var pill = sd.deltaSec>0 ? '<span class="delta-pill ahead">▲ +'+sd.deltaSec+' '+plur(sd.deltaSec,'section')+'</span>'
+             : sd.deltaSec<0 ? '<span class="delta-pill behind">▼ '+sd.deltaSec+' '+plur(sd.deltaSec,'section')+'</span>'
+             : '<span class="delta-pill ontrack">● dans les temps</span>';
+    top.appendChild(el("div","hero",
+      '<div class="big">'+d1+' / 65</div>'+
+      '<div class="sub">Lecture 1 · '+Math.round(d1/65*100)+' %  &nbsp; '+pill+'</div>'+
+      '<div class="track" style="margin-top:12px"><div class="fill" style="width:'+(d1/65*100)+'%"></div></div>'));
+    host.appendChild(top);
+
+    // Phase 1
+    var ph1=el("section","phase");
+    ph1.appendChild(el("div","phase-head",
+      '<div class="phase-num">1</div><div><h2>Lecture 1 — comprendre</h2>'+
+      '<p>Sept. 2026 → 10 févr. 2027 · 4 sections/semaine (lun→jeu). Le vendredi, tu relis les fiches. ★ = section où tu galères.</p></div>'));
+    PLAN.forEach(function(chap,ci){
+      var card=el("div","card chap"); if(state.open[ci]) card.classList.add("open");
+      var head=el("div","chap-head");
+      var t=el("div","chap-head-top");
+      t.appendChild(el("span","cnum",chap.n.replace("Chapitre ","CH ")));
+      t.appendChild(el("span","ctitle",chap.title));
+      t.appendChild(el("span","chev","›"));
+      head.appendChild(t);
+      var meta=el("div","chap-head-meta");
+      meta.appendChild(el("span","cmonth","🗓 "+chap.month));
+      var cc=chapCounts(ci);
+      meta.appendChild(el("span","cprog",cc[0]+"/"+cc[1]));
+      head.appendChild(meta);
+      head.addEventListener("click",function(){ card.classList.toggle("open"); state.open[ci]=card.classList.contains("open"); save(); });
+      card.appendChild(head);
+      var body=el("div","chap-body");
+      chap.parts.forEach(function(part,pi){
+        body.appendChild(el("div","part-label",part.p));
+        part.items.forEach(function(name,ii){
+          var id=secId(ci,pi,ii);
+          var row=el("div","row"); if(state.sec[id]) row.classList.add("checked");
+          var box=el("div","check"); box.innerHTML=CHECK_SVG;
+          box.addEventListener("click",function(){
+            state.sec[id]=!state.sec[id]; row.classList.toggle("checked",!!state.sec[id]);
+            meta.querySelector(".cprog").textContent=(function(){var c=chapCounts(ci);return c[0]+"/"+c[1];})();
+            top.querySelector(".big").textContent=countSec()+" / 65";
+            save();
+          });
+          row.appendChild(box);
+          row.appendChild(el("span","txt",name));
+          var flag=el("button","flag"+(state.weak[id]?" on":""),"★");
+          flag.addEventListener("click",function(){ state.weak[id]=!state.weak[id]; flag.classList.toggle("on",!!state.weak[id]); save(); });
+          row.appendChild(flag);
+          body.appendChild(row);
         });
-        subs.appendChild(chip);
       });
-      main.appendChild(subs);
-      task.appendChild(main);
-    } else {
-      var box = el("div","check"); box.innerHTML=CHECK_SVG;
-      var k = i+"-0";
-      task.classList.toggle("checked", !!state.p2[k]);
-      if(state.p2[k]) box.style.cssText="background:var(--good);border-color:var(--good)";
-      box.querySelector("svg").style.opacity = state.p2[k]?1:0;
-      box.querySelector("svg").style.transform = state.p2[k]?"scale(1)":"scale(.4)";
-      box.addEventListener("click", function(){
-        state.p2[k]=!state.p2[k];
-        box.style.cssText = state.p2[k]?"background:var(--good);border-color:var(--good)":"";
-        box.querySelector("svg").style.opacity = state.p2[k]?1:0;
-        box.querySelector("svg").style.transform = state.p2[k]?"scale(1)":"scale(.4)";
-        save(); refresh();
-      });
-      task.insertBefore(box, task.firstChild);
-      task.appendChild(main);
-    }
-    p2wrap.appendChild(task);
-  });
-
-  /* ---------------- render: phase 3 ---------------- */
-  var p3wrap = document.getElementById("phase3");
-  PHASE3.forEach(function(item, i){
-    var task = el("div","task");
-    var box = el("div","check"); box.innerHTML=CHECK_SVG;
-    function paint(){
-      var on = !!state.p3[i];
-      box.style.cssText = on?"background:var(--good);border-color:var(--good)":"";
-      var svg = box.querySelector("svg");
-      svg.style.opacity = on?1:0; svg.style.transform = on?"scale(1)":"scale(.4)";
-    }
-    paint();
-    box.addEventListener("click", function(){ state.p3[i]=!state.p3[i]; paint(); save(); refresh(); });
-    task.appendChild(box);
-
-    var main = el("div","tmain");
-    main.appendChild(el("div","tt", item.t));
-    main.appendChild(el("div","td", item.d));
-    task.appendChild(main);
-
-    if(item.score){
-      var inp = el("input","score-in"); inp.type="text"; inp.placeholder="… /100";
-      inp.value = state.score[i] || "";
-      inp.addEventListener("input", function(){ state.score[i]=inp.value; save(); });
-      task.appendChild(inp);
-    }
-    p3wrap.appendChild(task);
-  });
-
-  /* ---------------- meters + countdown ---------------- */
-  function setMeter(id, done, tot){
-    var pct = tot ? Math.round(done/tot*100) : 0;
-    document.getElementById(id+"pct").textContent = pct+" %";
-    document.getElementById(id+"cnt").textContent = done+" / "+tot;
-    document.getElementById(id+"fill").style.width = pct+"%";
-    document.getElementById(id).classList.toggle("done", done===tot && tot>0);
-  }
-  function refresh(){
-    var d1=0,t1=0;
-    PLAN.forEach(function(_,ci){ var c=chapCounts(ci); d1+=c[0]; t1+=c[1];
-      PLAN[ci]._prog.textContent = c[0]+"/"+c[1];
+      card.appendChild(body);
+      ph1.appendChild(card);
     });
-    setMeter("m1", d1, t1);
+    var wl=weakList();
+    var wb=el("div","weakbox","<h3>Mes points faibles (★)</h3>");
+    var ul=el("ul");
+    if(wl.length) wl.forEach(function(x){ ul.appendChild(el("li",null,"<span>"+x+"</span>")); });
+    else ul.appendChild(el("li","empty","Rien pour l’instant. Marque les sections dures avec ★."));
+    wb.appendChild(ul); ph1.appendChild(wb);
+    host.appendChild(ph1);
 
-    var d2=0,t2=0;
+    // Phase 2
+    var ph2=el("section","phase");
+    ph2.appendChild(el("div","phase-head",
+      '<div class="phase-num" style="background:var(--p2)">2</div><div><h2>Lecture 2 — mémoriser</h2>'+
+      '<p>16 févr. → 12 avr. 2027 · relecture rapide + fiches + QCM par chapitre.</p></div>'));
+    var c2=el("div","card");
     PHASE2.forEach(function(item,i){
-      if(item.single){ t2+=1; if(state.p2[i+"-0"]) d2+=1; }
-      else { P2SUB.forEach(function(_,j){ t2+=1; if(state.p2[i+"-"+j]) d2+=1; }); }
+      var task=el("div","task");
+      var main=el("div","tmain");
+      main.appendChild(el("div","tt",item.t));
+      main.appendChild(el("div","td",item.d));
+      if(!item.single){
+        var subs=el("div","subchecks");
+        P2SUB.forEach(function(lbl,j){
+          var k=i+"-"+j;
+          var chip=el("div","chip"+(state.p2[k]?" on":""),lbl);
+          chip.addEventListener("click",function(){ state.p2[k]=!state.p2[k]; chip.classList.toggle("on",!!state.p2[k]); save(); });
+          subs.appendChild(chip);
+        });
+        main.appendChild(subs);
+        task.appendChild(main);
+      } else {
+        var box=el("div","check"); box.innerHTML=CHECK_SVG;
+        var k=i+"-0";
+        function paint(){ var on=!!state.p2[k]; box.style.cssText=on?"background:var(--good);border-color:var(--good)":""; var s=box.querySelector("svg"); s.style.opacity=on?1:0; s.style.transform=on?"scale(1)":"scale(.4)"; }
+        paint();
+        box.addEventListener("click",function(){ state.p2[k]=!state.p2[k]; paint(); save(); });
+        task.appendChild(box); task.appendChild(main);
+      }
+      c2.appendChild(task);
     });
-    setMeter("m2", d2, t2);
+    ph2.appendChild(c2);
+    host.appendChild(ph2);
 
-    var d3=0,t3=PHASE3.length;
-    PHASE3.forEach(function(_,i){ if(state.p3[i]) d3+=1; });
-    setMeter("m3", d3, t3);
+    // Phase 3
+    var ph3=el("section","phase");
+    ph3.appendChild(el("div","phase-head",
+      '<div class="phase-num" style="background:var(--p3)">3</div><div><h2>Annales — s’entraîner</h2>'+
+      '<p>13 avr. → jour J · 1 sujet complet chronométré par semaine, puis correction.</p></div>'));
+    var c3=el("div","card");
+    PHASE3.forEach(function(item,i){
+      var task=el("div","task");
+      var box=el("div","check"); box.innerHTML=CHECK_SVG;
+      function paint(){ var on=!!state.p3[i]; box.style.cssText=on?"background:var(--good);border-color:var(--good)":""; var s=box.querySelector("svg"); s.style.opacity=on?1:0; s.style.transform=on?"scale(1)":"scale(.4)"; }
+      paint();
+      box.addEventListener("click",function(){ state.p3[i]=!state.p3[i]; paint(); save(); });
+      task.appendChild(box);
+      var main=el("div","tmain");
+      main.appendChild(el("div","tt",item.t));
+      main.appendChild(el("div","td",item.d));
+      task.appendChild(main);
+      if(item.score){
+        var inp=el("input","score-in"); inp.type="text"; inp.placeholder="… /100"; inp.value=state.score[i]||"";
+        inp.addEventListener("input",function(){ state.score[i]=inp.value; save(); });
+        task.appendChild(inp);
+      }
+      c3.appendChild(task);
+    });
+    ph3.appendChild(c3);
+    var meth=el("details","method");
+    meth.innerHTML='<summary>Méthode & rappels</summary><div class="m-body">'+
+      '<p><strong>Chaque jour :</strong> 30 min = 20 min de lecture + 10 min de trace écrite.</p>'+
+      '<p><strong>Points faibles :</strong> chaque section ★ passe en priorité en phases 2 et 3.</p>'+
+      '<p><strong>Météo (chapitre 3) :</strong> le plus dense — c’est normal d’y passer 2 semaines en phase 2.</p>'+
+      '<p><strong>Anglais :</strong> épreuve facultative = uniquement des points en plus. 2 × 20 min de vocabulaire/semaine dès avril.</p>'+
+      '<p><strong>3 derniers jours :</strong> relecture des fiches seulement, zéro nouveau contenu, et tu dors.</p></div>';
+    ph3.appendChild(meth);
+    host.appendChild(ph3);
   }
 
-  function countdown(){
-    var now = new Date();
-    var days = Math.ceil((EXAM - now)/86400000);
-    var cd = document.getElementById("cd");
-    if(days > 0) cd.textContent = "J–"+days;
-    else if(days === 0) cd.textContent = "Jour J ✈️";
-    else cd.textContent = "examen passé";
-    var weeks = Math.floor(days/7);
-    if(days>0) document.getElementById("cdsub").textContent =
-      "≈ "+weeks+" semaines · examen autour du 19 mai 2027 · prêt visé le 10 mai";
-  }
+  /* ================= RENDER : Calendrier ================= */
+  var calY, calM, selDay=null;
+  function renderCalendrier(host){
+    setBar("Calendrier", "J–"+daysToExam());
+    var sd=scheduleDelta();
+    if(calY===undefined){ var n=new Date(); calY=n.getFullYear(); calM=n.getMonth(); }
 
-  /* ---------------- theme ---------------- */
-  var themeBtn = document.getElementById("themeBtn");
-  var order = ["auto","light","dark"];
-  var glyph = {auto:"🌓",light:"☀️",dark:"🌙"};
-  function applyTheme(){
-    document.documentElement.setAttribute("data-theme", state.theme);
-    themeBtn.textContent = glyph[state.theme];
-  }
-  themeBtn.addEventListener("click", function(){
-    state.theme = order[(order.indexOf(state.theme)+1)%3];
-    applyTheme(); save();
-  });
-
-  /* ---------------- reset ---------------- */
-  document.getElementById("resetBtn").addEventListener("click", function(){
-    if(confirm("Remettre toute la progression à zéro ?")){
-      var th = state.theme;
-      state = { sec:{}, weak:{}, p2:{}, p3:{}, score:{}, open:{}, theme:th };
-      try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
-      location.reload();
+    // headline
+    var hc=el("div","card"); hc.style.marginBottom="14px";
+    var k,v,dsc;
+    if(sd.beforeStart){
+      k="Avant le départ";
+      v = sd.actual>0 ? ("Déjà "+sd.actual+" "+plur(sd.actual,"section")+" d’avance") : "La Lecture 1 commence le 1er septembre";
+      dsc = "Objectif : ~4 sections/semaine à partir de septembre.";
+    } else if(sd.phase1Done){
+      k="Lecture 1"; v="Terminée 🎉"; dsc="Place à la Lecture 2 (mémorisation) puis aux annales.";
+    } else {
+      if(sd.deltaSec>=1){ k="Tu es en avance"; v="+"+sd.deltaSec+" "+plur(sd.deltaSec,"section")+"  (≈ "+sd.deltaDays+" j)"; dsc="Objectif du jour : "+Math.round(sd.exp)+" / 65 sections lues. Tu en es à "+sd.actual+"."; }
+      else if(sd.deltaSec<=-1){ k="Tu es en retard"; v=sd.deltaSec+" "+plur(sd.deltaSec,"section")+"  (≈ "+Math.abs(sd.deltaDays)+" j)"; dsc="Objectif du jour : "+Math.round(sd.exp)+" / 65 sections lues. Tu en es à "+sd.actual+". Rattrape 1–2 sections en plus par jour cette semaine."; }
+      else { k="Pile dans les temps"; v="✅ "+sd.actual+" / 65"; dsc="Objectif du jour : "+Math.round(sd.exp)+" sections. Continue à ce rythme."; }
     }
-  });
+    hc.appendChild(el("div","cal-headline",'<div class="k">'+k+'</div><div class="v">'+v+'</div><div class="d">'+dsc+'</div>'));
+    host.appendChild(hc);
 
-  /* ---------------- go ---------------- */
+    // calendar card
+    var cc=el("div","card");
+    var nav=el("div","cal-nav");
+    var prev=el("button",null,"‹"), next=el("button",null,"›");
+    prev.addEventListener("click",function(){ calM--; if(calM<0){calM=11;calY--;} render(); });
+    next.addEventListener("click",function(){ calM++; if(calM>11){calM=0;calY++;} render(); });
+    nav.appendChild(prev);
+    nav.appendChild(el("b",null,MONTHS[calM]+" "+calY));
+    nav.appendChild(next);
+    cc.appendChild(nav);
+
+    var grid=el("div","cal-grid");
+    ["L","M","M","J","V","S","D"].forEach(function(d){ grid.appendChild(el("div","cal-dow",d)); });
+    var first=new Date(calY,calM,1);
+    var lead=(first.getDay()+6)%7;
+    for(var i=0;i<lead;i++) grid.appendChild(el("div","cal-cell blank"));
+    var ndays=new Date(calY,calM+1,0).getDate();
+    var todayStr=(function(){var n=new Date();return n.getFullYear()+"-"+n.getMonth()+"-"+n.getDate();})();
+    for(var day=1;day<=ndays;day++){
+      var dt=new Date(calY,calM,day);
+      var ph=phaseOfDate(dt);
+      var cell=el("div","cal-cell "+ph);
+      if(vacOfDate(dt)) cell.classList.add("vac");
+      if(calY+"-"+calM+"-"+day===todayStr) cell.classList.add("today");
+      if(selDay===calY+"-"+calM+"-"+day) cell.classList.add("sel");
+      cell.appendChild(el("span",null,String(day)));
+      var mk="";
+      if(d0(dt).getTime()===d0(EXAM).getTime()) mk="✈";
+      else if(d0(dt).getTime()===d0(READY).getTime()) mk="◎";
+      else if(ph==="p1"||ph==="p2"||ph==="p3") cell.appendChild(el("span","dot"));
+      if(mk) cell.appendChild(el("span","mk",mk));
+      (function(dt){
+        cell.addEventListener("click",function(){
+          selDay=dt.getFullYear()+"-"+dt.getMonth()+"-"+dt.getDate();
+          renderCalDetail(cc,dt);
+          cc.querySelectorAll(".cal-cell.sel").forEach(function(c){c.classList.remove("sel");});
+          cell.classList.add("sel");
+        });
+      })(dt);
+      grid.appendChild(cell);
+    }
+    cc.appendChild(grid);
+
+    cc.appendChild(el("div","cal-legend",
+      '<span><i style="background:color-mix(in srgb,var(--p1) 40%,var(--surface))"></i>Lecture 1</span>'+
+      '<span><i style="background:color-mix(in srgb,var(--p2) 40%,var(--surface))"></i>Lecture 2</span>'+
+      '<span><i style="background:color-mix(in srgb,var(--p3) 40%,var(--surface))"></i>Annales</span>'+
+      '<span><i style="background:var(--exam)"></i>✈ Examen</span>'+
+      '<span>◎ Prêt visé (10 mai)</span>'+
+      '<span>▫ vacances</span>'));
+
+    var detailWrap=el("div","cal-detail-slot");
+    cc.appendChild(detailWrap);
+    host.appendChild(cc);
+
+    // initial detail = today
+    renderCalDetail(cc, new Date());
+  }
+  function renderCalDetail(cc,dt){
+    var slot=cc.querySelector(".cal-detail-slot"); if(!slot) return;
+    slot.innerHTML="";
+    var d=el("div","cal-detail");
+    var lbl=cap(DOWS[(dt.getDay()+6)%7])+" "+dt.getDate()+" "+MONTHS[dt.getMonth()]+" "+dt.getFullYear();
+    d.appendChild(el("div","dt",lbl));
+    var ph=phaseOfDate(dt), vac=vacOfDate(dt);
+    var body="";
+    if(d0(dt).getTime()===d0(EXAM).getTime()) body='<b>Jour J ✈️</b> — épreuve BIA, 2 h 30.';
+    else if(d0(dt).getTime()===d0(READY).getTime()) body='<b>Objectif « prêt »</b> — à cette date, tout doit être révisé.';
+    else if(vac) body='<b>'+vac+'</b> — tu souffles, ou tu prends de l’avance. Le planning en tient déjà compte.';
+    else if(ph==="p1"){
+      var exp=Math.round(expectedSections(dt));
+      var wk=Math.max(0, Math.round(expectedSections(dt)-expectedSections(new Date(dt.getFullYear(),dt.getMonth(),dt.getDate()-7))));
+      body='<b>Lecture 1</b> — objectif cumulé : <b>'+exp+' / 65</b> sections lues'+(wk?(' <span class="dl">(soit ~'+wk+' cette semaine)</span>'):'')+'.';
+    }
+    else if(ph==="p2"){
+      var idx=Math.min(PHASE2.length-1, Math.floor((d0(dt)-d0(new Date(2027,1,16)))/(7*dayMs())));
+      body='<b>Lecture 2</b> — '+(PHASE2[idx]?PHASE2[idx].t:'relecture + fiches + QCM par chapitre')+'.';
+    }
+    else if(ph==="p3"){
+      var i3=Math.min(3, Math.floor((d0(dt)-d0(new Date(2027,3,13)))/(7*dayMs())));
+      body='<b>Annales</b> — '+(i3>=0&&i3<=3?('Annale blanche nº '+(i3+1)+' cette semaine'):'révision des fiches et des questions ratées')+'.';
+    }
+    else body='<span class="dl">Hors période de révision planifiée.</span>';
+    d.appendChild(el("div","dl",body));
+    slot.appendChild(d);
+  }
+
+  /* ================= RENDER : Questions ================= */
+  var qcmPart=0;
+  function renderQuestions(host){
+    var g=qcmGlobal();
+    setBar("Questions", g.justes+" / "+g.faites+" justes");
+
+    var pills=el("div","ep-pills");
+    QCM.forEach(function(p,i){
+      var s=qcmPartStats(p);
+      var b=el("button","ep-pill"+(i===qcmPart?" active":""), p.nav+" · "+s.faites+"/"+s.total);
+      b.addEventListener("click",function(){ qcmPart=i; render(); });
+      pills.appendChild(b);
+    });
+    host.appendChild(pills);
+
+    var p=QCM[qcmPart];
+    var card=el("div","card"); card.style.marginBottom="14px";
+    card.appendChild(el("div","ep-head",
+      '<div class="eb">'+p.exam+' · '+p.manuel+'</div><h2>'+p.title+'</h2><p>'+p.intro+'</p>'));
+    host.appendChild(card);
+
+    var fiche=el("div","panel fiche","<h3>À savoir par cœur</h3><ul>"+p.fiche.map(function(x){return "<li>"+x+"</li>";}).join("")+"</ul>");
+    host.appendChild(fiche);
+    var pieges=el("div","panel pieges","<h3>Pièges classiques</h3><ul>"+p.pieges.map(function(x){return "<li>"+x+"</li>";}).join("")+"</ul>");
+    host.appendChild(pieges);
+
+    var st=qcmPartStats(p);
+    var tools=el("div","q-tools");
+    tools.innerHTML='<span class="count"><b>'+st.justes+'</b> '+plur(st.justes,"juste")+' / '+st.faites+' '+plur(st.faites,"faite")+' · '+st.total+' au total</span>'+
+      '<button class="tool" data-a="show">Afficher les réponses</button>'+
+      '<button class="tool" data-a="reset">Réinitialiser</button>';
+    host.appendChild(tools);
+
+    var list=el("div","qlist");
+    p.questions.forEach(function(qd,i){
+      var q=el("div","q");
+      var stored=state.qcm[p.id+"."+i];
+      var stem=el("div","q-stem",'<span class="qn">'+(i+1)+'</span><span>'+qd.q+'</span>');
+      q.appendChild(stem);
+      var ul=el("ul","q-opts");
+      qd.o.forEach(function(opt,j){
+        var li=el("li");
+        var btn=el("button","q-opt"+(j===qd.c?" correct":""),'<span class="k">'+LETTERS[j]+'</span><span>'+opt+'</span>');
+        btn.type="button";
+        btn.addEventListener("click",function(){
+          if(q.classList.contains("revealed")) return;
+          state.qcm[p.id+"."+i]=j;
+          if(j!==qd.c) btn.classList.add("chosen","wrong");
+          q.classList.add("revealed");
+          save();
+          refreshQTools(tools,p);
+        });
+        li.appendChild(btn); ul.appendChild(li);
+      });
+      q.appendChild(ul);
+      q.appendChild(el("div","q-why",'<b>'+LETTERS[qd.c]+'.</b> '+qd.w));
+      if(stored!==undefined){
+        q.classList.add("revealed");
+        var btns=ul.querySelectorAll(".q-opt");
+        if(stored!==qd.c && btns[stored]) btns[stored].classList.add("chosen","wrong");
+      }
+      list.appendChild(q);
+    });
+    host.appendChild(list);
+
+    tools.addEventListener("click",function(e){
+      var b=e.target.closest("button"); if(!b) return;
+      if(b.dataset.a==="show"){
+        list.querySelectorAll(".q").forEach(function(q,i){
+          q.classList.add("revealed");
+          if(state.qcm[p.id+"."+i]===undefined){ state.qcm[p.id+"."+i]=-1; }
+        });
+        save(); refreshQTools(tools,p); refreshPills(pills);
+      } else {
+        p.questions.forEach(function(_,i){ delete state.qcm[p.id+"."+i]; });
+        save(); render();
+      }
+    });
+  }
+  function refreshQTools(tools,p){
+    var st=qcmPartStats(p);
+    tools.querySelector(".count").innerHTML='<b>'+st.justes+'</b> '+plur(st.justes,"juste")+' / '+st.faites+' '+plur(st.faites,"faite")+' · '+st.total+' au total';
+    var g=qcmGlobal(); setBar("Questions", g.justes+" / "+g.faites+" justes");
+  }
+  function refreshPills(pills){
+    pills.querySelectorAll(".ep-pill").forEach(function(b,i){
+      var s=qcmPartStats(QCM[i]); b.textContent=QCM[i].nav+" · "+s.faites+"/"+s.total;
+      b.classList.toggle("active",i===qcmPart);
+    });
+  }
+
+  /* ================= RENDER : Dashboard ================= */
+  function renderDashboard(host){
+    setBar("Dashboard", "J–"+daysToExam());
+    var sd=scheduleDelta();
+    var d1=countSec(), c2=p2Counts(), c3=p3Counts(), g=qcmGlobal(), wl=weakList();
+    var weeksLeft=Math.max(0.5,(d0(EXAM)-d0(new Date()))/(7*dayMs()));
+
+    var hero=el("div","card"); hero.style.marginBottom="14px";
+    hero.appendChild(el("div","hero",
+      '<div class="big">J–'+daysToExam()+'</div>'+
+      '<div class="sub">Examen autour du 19 mai 2027 · ≈ '+Math.round(daysToExam()/7)+' semaines · prêt visé le 10 mai</div>'));
+    host.appendChild(hero);
+
+    // avance/retard
+    var deltaCard=el("div","stat"); deltaCard.style.marginBottom="14px";
+    var pillCls = sd.deltaSec>0?"ahead":sd.deltaSec<0?"behind":"ontrack";
+    var pillTxt = sd.beforeStart ? (sd.actual>0?("▲ "+sd.actual+" "+plur(sd.actual,"section")+" d’avance"):"démarre le 1er septembre")
+                : sd.phase1Done ? "Lecture 1 terminée 🎉"
+                : sd.deltaSec>0 ? ("▲ en avance de "+sd.deltaSec+" "+plur(sd.deltaSec,"section")+" (≈ "+sd.deltaDays+" j)")
+                : sd.deltaSec<0 ? ("▼ en retard de "+Math.abs(sd.deltaSec)+" "+plur(sd.deltaSec,"section")+" (≈ "+Math.abs(sd.deltaDays)+" j)")
+                : "● pile dans les temps";
+    deltaCard.innerHTML='<div class="lbl">Rythme vs planning</div>'+
+      '<div style="margin:8px 0 4px"><span class="delta-pill '+pillCls+'">'+pillTxt+'</span></div>'+
+      '<div class="hint">Objectif du jour : '+Math.round(sd.exp)+' / 65 sections lues · tu en es à '+sd.actual+'.</div>';
+    host.appendChild(deltaCard);
+
+    host.appendChild(el("div","sec-title","Progression"));
+    var grid=el("div","statgrid"); grid.style.marginBottom="14px";
+    function statCard(lbl,val,hint,pct,color){
+      return '<div class="stat"><div class="lbl">'+lbl+'</div><div class="val">'+val+'</div><div class="hint">'+hint+'</div>'+
+        '<div class="track"><div class="fill" style="width:'+pct+'%;background:'+color+'"></div></div></div>';
+    }
+    var paceNeed = sd.phase1Done ? 0 : Math.max(0,(65-d1)/Math.max(0.5,(d0(new Date(2027,1,10))-d0(new Date()))/(7*dayMs())));
+    grid.innerHTML=
+      statCard("Lecture 1", d1+" / 65", Math.round(d1/65*100)+" % · reste "+(65-d1), d1/65*100, "var(--p1)")+
+      statCard("Lecture 2", c2[0]+" / "+c2[1], Math.round(c2[0]/c2[1]*100)+" % (relu/fiches/QCM)", c2[0]/c2[1]*100, "var(--p2)")+
+      statCard("Annales", c3[0]+" / "+c3[1], Math.round(c3[0]/c3[1]*100)+" %", c3[0]/c3[1]*100, "var(--p3)")+
+      statCard("Rythme à tenir", (paceNeed?paceNeed.toFixed(1):"—"), sd.phase1Done?"Lecture 1 finie":"sections/sem. pour finir le 10 févr.", Math.min(100,paceNeed/6*100), "var(--accent)");
+    host.appendChild(grid);
+
+    host.appendChild(el("div","sec-title","Entraînement QCM"));
+    var qc=el("div","card"); qc.style.marginBottom="14px"; qc.style.padding="14px 15px";
+    var pct = g.faites? Math.round(g.justes/g.faites*100):0;
+    qc.appendChild(el("div",null,
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px">'+
+      '<div><div style="font-size:1.4rem;font-weight:780">'+pct+' %</div>'+
+      '<div style="font-size:.78rem;color:var(--muted)">'+g.justes+' '+plur(g.justes,"juste")+' sur '+g.faites+' '+plur(g.faites,"faite")+' · '+g.total+' questions au total</div></div></div>'));
+    var mr=el("div","mini-rows");
+    QCM.forEach(function(p){
+      var s=qcmPartStats(p);
+      var r=el("div","mini");
+      var sp = s.faites? Math.round(s.justes/s.faites*100):0;
+      r.innerHTML='<span class="mlbl">'+p.nav+'</span>'+
+        '<span class="track"><span class="fill" style="width:'+(s.faites?sp:0)+'%;background:'+(sp>=70?"var(--good)":sp>=50?"var(--warn)":"var(--bad)")+'"></span></span>'+
+        '<span class="mval">'+s.justes+"/"+s.faites+'</span>';
+      mr.appendChild(r);
+    });
+    qc.appendChild(mr);
+    host.appendChild(qc);
+
+    // annale scores
+    var anySc=PHASE3.some(function(it,i){ return it.score && state.score[i]; });
+    if(anySc){
+      host.appendChild(el("div","sec-title","Annales blanches"));
+      var ac=el("div","card"); ac.style.marginBottom="14px"; ac.style.padding="12px 15px";
+      PHASE3.forEach(function(it,i){
+        if(it.score && state.score[i]){
+          ac.appendChild(el("div",null,'<div style="display:flex;justify-content:space-between;font-size:.86rem;padding:5px 0"><span style="color:var(--muted)">'+it.t+'</span><b>'+state.score[i]+'</b></div>'));
+        }
+      });
+      host.appendChild(ac);
+    }
+
+    host.appendChild(el("div","sec-title","Points faibles ("+wl.length+")"));
+    var wc=el("div","card"); wc.style.padding="12px 15px";
+    if(wl.length){
+      wl.slice(0,8).forEach(function(x){ wc.appendChild(el("div",null,'<div style="font-size:.85rem;padding:4px 0"><span style="color:var(--warn)">★</span> '+x+'</div>')); });
+      if(wl.length>8) wc.appendChild(el("div",null,'<div style="font-size:.8rem;color:var(--muted);padding-top:4px">+ '+(wl.length-8)+' autres</div>'));
+    } else {
+      wc.appendChild(el("div","",'<div style="font-size:.84rem;color:var(--muted)">Aucune section marquée. Utilise ★ dans le Planning sur ce qui te résiste.</div>'));
+    }
+    host.appendChild(wc);
+  }
+
+  /* ================= RENDER : Réglages ================= */
+  function renderReglages(host){
+    setBar("Réglages", null);
+    var c=el("div","card"); c.style.marginBottom="14px";
+
+    var r1=el("div","set-row");
+    r1.innerHTML='<div><div class="sl">Thème</div><div class="sd">Automatique suit ton téléphone</div></div>';
+    var seg=el("div","seg");
+    [["auto","Auto"],["light","Clair"],["dark","Sombre"]].forEach(function(o){
+      var b=el("button",state.theme===o[0]?"on":null,o[1]);
+      b.addEventListener("click",function(){ state.theme=o[0]; applyTheme(); save(); render(); });
+      seg.appendChild(b);
+    });
+    r1.appendChild(seg);
+    c.appendChild(r1);
+
+    var r2=el("div","set-row");
+    r2.innerHTML='<div><div class="sl">Date de l’examen</div><div class="sd">Repère : ~19 mai 2027. Date officielle publiée vers déc. 2026.</div></div>';
+    c.appendChild(r2);
+
+    var r3=el("div","set-row");
+    r3.innerHTML='<div><div class="sl">Page « Questions » détaillée</div><div class="sd">Version imprimable / à partager, hors de l’app</div></div>'+
+      '<a href="https://claude.ai/code/artifact/43cdbb91-343d-4ec2-bcca-584d4f5c26ea" target="_blank" rel="noopener" style="font-size:.8rem;font-weight:650">Ouvrir ↗</a>';
+    c.appendChild(r3);
+
+    var r4=el("div","set-row");
+    r4.innerHTML='<div><div class="sl">Remise à zéro</div><div class="sd">Efface toute ta progression sur cet appareil</div></div>';
+    var db=el("button","btn-danger","Tout effacer");
+    db.addEventListener("click",function(){
+      if(confirm("Remettre toute la progression à zéro ?")){
+        var th=state.theme;
+        state={ sec:{}, weak:{}, p2:{}, p3:{}, score:{}, open:{}, qcm:{}, theme:th, tab:"planning" };
+        try{ localStorage.setItem(KEY,JSON.stringify(state)); }catch(e){}
+        location.reload();
+      }
+    });
+    r4.appendChild(db);
+    c.appendChild(r4);
+    host.appendChild(c);
+
+    host.appendChild(el("div",null,'<div style="font-size:.76rem;color:var(--faint);text-align:center;padding:8px 12px 0">'+
+      'Progression enregistrée sur cet appareil (localStorage). Contenu basé sur le manuel officiel BIA (eduscol) et les sujets 2022–2025.</div>'));
+  }
+
+  /* ================= TAB BAR ================= */
+  var ICON={
+    planning:'<svg viewBox="0 0 24 24"><path d="M9 3h6a2 2 0 0 1 2 2v0H7v0a2 2 0 0 1 2-2z"/><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M9 12l2 2 4-4"/></svg>',
+    calendrier:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+    questions:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8v.5"/><circle cx="12" cy="16.5" r=".6" fill="currentColor" stroke="none"/></svg>',
+    dashboard:'<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+    reglages:'<svg viewBox="0 0 24 24"><path d="M6 8h12M6 8a2 2 0 1 1 0 .01M6 16h12M14 16a2 2 0 1 1 .01 0"/></svg>'
+  };
+  var TABS=[["planning","Planning"],["calendrier","Calendrier"],["questions","Questions"],["dashboard","Dashboard"],["reglages","Réglages"]];
+  function renderTabbar(){
+    var tb=document.getElementById("tabbar");
+    tb.innerHTML="";
+    TABS.forEach(function(t){
+      var b=el("button",state.tab===t[0]?"active":null, ICON[t[0]]+"<span>"+t[1]+"</span>");
+      b.addEventListener("click",function(){ if(state.tab!==t[0]){ state.tab=t[0]; save(); render(); } });
+      tb.appendChild(b);
+    });
+  }
+
+  function setBar(title,ctx){
+    document.getElementById("barTitle").innerHTML="✈️ "+title;
+    document.getElementById("barCtx").textContent = ctx||"";
+  }
+
+  /* ================= THEME ================= */
+  function applyTheme(){ document.documentElement.setAttribute("data-theme",state.theme); }
+
+  /* ================= ROUTER ================= */
+  var RENDER={ planning:renderPlanning, calendrier:renderCalendrier, questions:renderQuestions, dashboard:renderDashboard, reglages:renderReglages };
+  function render(){
+    renderTabbar();
+    var host=document.getElementById("view");
+    host.innerHTML="";
+    (RENDER[state.tab]||renderPlanning)(host);
+    window.scrollTo(0,0);
+  }
+
   applyTheme();
-  renderWeak();
-  refresh();
-  countdown();
-  setInterval(countdown, 3600000);
+  render();
 })();
 </script>
 </body>
