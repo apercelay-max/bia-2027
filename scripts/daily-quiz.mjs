@@ -37,11 +37,18 @@ function isoToUTC(iso) { const p = (iso || '').split('-'); return Date.UTC(+p[0]
 function daysAgo(iso) { return iso ? Math.round((isoToUTC(todayISO()) - isoToUTC(iso)) / 86400000) : 999; }
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
+// épreuves débloquées = chapitres où au moins une section est cochée. Rien coché → [].
 function activeEps(state) {
   const seen = new Set();
   for (const k of Object.keys(state.sec || {})) if (state.sec[k]) seen.add(String(k).split('.')[0]);
-  const ids = [...seen].map((c) => CHAP2EP[c]).filter(Boolean);
-  return ids.length ? ids : ALL_EPS;
+  return [...seen].map((c) => CHAP2EP[c]).filter(Boolean);
+}
+// a-t-il travaillé récemment ? jour marqué actif dans les 3 derniers jours.
+// (aucune trace d'activité du tout mais des sections cochées → bénéfice du doute)
+function workedRecently(state) {
+  const days = Object.keys(state.act || {});
+  if (!days.length) return Object.keys(state.sec || {}).some((k) => state.sec[k]);
+  return days.some((d) => daysAgo(d) <= 3);
 }
 
 function pickQuiz(state) {
@@ -103,6 +110,7 @@ async function run() {
     if (already && !FORCE) {
       qids = state.daily.qids;                 // quiz déjà généré par l'app → on garde, on relance juste la notif
     } else {
+      if (!FORCE && !workedRecently(state)) { console.log(`${row.code}: pas travaillé récemment, on attend`); continue; }
       qids = pickQuiz(state);
       if (!qids.length) { console.log(`${row.code}: aucune question disponible`); continue; }
       state.daily = { date: t, qids, done: false };

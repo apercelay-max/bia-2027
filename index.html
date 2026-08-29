@@ -670,10 +670,11 @@
       s.open=s.open||{}; s.qcm=s.qcm||{}; s.qcmAt=s.qcmAt||{}; s.theme=s.theme||"auto"; s.tab=s.tab||"planning";
       s.subs=s.subs||[]; s.dailyOn=!!s.dailyOn; s.daily=s.daily||null;
       s.dailyStreak=s.dailyStreak||0; s.dailyLast=s.dailyLast||"";
+      s.act=s.act||{}; s.eveningLast=s.eveningLast||"";
       return s;
     }}catch(e){}
     return { sec:{}, weak:{}, p2:{}, p3:{}, score:{}, open:{}, qcm:{}, qcmAt:{}, theme:"auto", tab:"planning",
-             subs:[], dailyOn:false, daily:null, dailyStreak:0, dailyLast:"" };
+             subs:[], dailyOn:false, daily:null, dailyStreak:0, dailyLast:"", act:{}, eveningLast:"" };
   }
   var saveT;
   function save(){ clearTimeout(saveT); saveT=setTimeout(function(){
@@ -719,6 +720,9 @@
     try{ return new Date().toLocaleDateString("fr-CA",{timeZone:"Europe/Paris"}); }
     catch(e){ var d=new Date(); return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); }
   }
+  function isoOf(dt){ return dt.getFullYear()+"-"+pad2(dt.getMonth()+1)+"-"+pad2(dt.getDate()); }
+  // marque le jour comme "travaillé" (section cochée ou question de quiz répondue)
+  function markActive(){ var t=todayISO(); if(!state.act[t]){ state.act[t]=1; save(); } }
   function isoToUTC(iso){ var p=(iso||"").split("-"); return Date.UTC(+p[0], (+p[1]||1)-1, +p[2]||1); }
   function daysAgoISO(iso){
     if(!iso) return 999;
@@ -825,6 +829,24 @@
     for(var i=0;i<VAC.length;i++){ if(t>=d0(VAC[i][0]).getTime() && t<=d0(VAC[i][1]).getTime()) return VAC[i][2]; }
     return null;
   }
+  // un "jour de révision" = lundi→vendredi, dans une phase, hors vacances
+  function isStudyDay(dt){
+    var dow=(dt.getDay()+6)%7;
+    return dow<=4 && phaseOfDate(dt)!=="off" && !vacOfDate(dt);
+  }
+  // jours actifs consécutifs : un jour travaillé compte toujours ; un jour de
+  // révision manqué casse la série ; un week-end/vacances non travaillé est transparent.
+  function activeStreak(){
+    var d=new Date();
+    if(!state.act[isoOf(d)]) d.setDate(d.getDate()-1);   // aujourd'hui pas encore fait → on part d'hier
+    var s=0, guard=0;
+    while(guard++<420){
+      if(state.act[isoOf(d)]){ s++; d.setDate(d.getDate()-1); continue; }
+      if(isStudyDay(d)) break;
+      d.setDate(d.getDate()-1);
+    }
+    return s;
+  }
 
   /* ================= RENDER : Planning ================= */
   function renderPlanning(host){
@@ -886,6 +908,7 @@
           var box=el("div","check"); box.innerHTML=CHECK_SVG;
           box.addEventListener("click",function(){
             state.sec[id]=!state.sec[id]; row.classList.toggle("checked",!!state.sec[id]);
+            if(state.sec[id]) markActive();
             meta.querySelector(".cprog").textContent=(function(){var c=chapCounts(ci);return c[0]+"/"+c[1];})();
             top.querySelector(".big").textContent=countSec()+" / 65";
             save();
@@ -1165,6 +1188,7 @@
           if(q.classList.contains("revealed")) return;
           state.qcm[p.id+"."+i]=j;
           state.qcmAt[p.id+"."+i]=todayISO();
+          markActive();
           if(j!==qd.c) btn.classList.add("chosen","wrong");
           q.classList.add("revealed");
           save();
@@ -1263,6 +1287,7 @@
         btn.addEventListener("click",function(){
           if(q.classList.contains("revealed")) return;
           state.qcm[qid]=j; state.qcmAt[qid]=todayISO();
+          markActive();
           if(j!==qd.c) btn.classList.add("chosen","wrong");
           q.classList.add("revealed");
           // fini ?
@@ -1343,6 +1368,15 @@
       qCard.innerHTML='<div class="quiz-intro"><h3>🎯 Quiz de révision</h3><p style="margin:0">Se débloque dès que tu coches une section dans le Planning.</p></div>';
     }
     host.appendChild(qCard);
+
+    // Jours actifs
+    var st=activeStreak(), todayDone=!!state.act[todayISO()];
+    var streakCard=el("div","stat"); streakCard.style.marginBottom="14px";
+    streakCard.innerHTML='<div class="lbl">Jours actifs</div>'+
+      '<div class="val">'+st+' '+plur(st,"jour")+(st>=3?' 🔥':'')+'</div>'+
+      '<div class="hint">'+(todayDone?'Aujourd’hui : ✅ fait.':(isStudyDay(new Date())?'Aujourd’hui : rien encore.':'Aujourd’hui : jour de repos.'))+
+      ' Compte dès que tu coches une section ou fais un quiz ; les week-ends et vacances ne cassent pas la série.</div>';
+    host.appendChild(streakCard);
 
     host.appendChild(el("div","sec-title","Progression"));
     var grid=el("div","statgrid"); grid.style.marginBottom="14px";
@@ -1444,7 +1478,7 @@
     var nc=el("div","card"); nc.style.marginBottom="14px";
     var nr=el("div","set-row"); nr.style.flexDirection="column"; nr.style.alignItems="stretch";
     var permTxt = ("Notification" in window) ? ({granted:"autorisées", denied:"bloquées"}[Notification.permission] || "à autoriser") : "non gérées";
-    nr.innerHTML='<div><div class="sl">Rappel du matin</div><div class="sd">Chaque matin ~8 h : une notif t’ouvre un quiz de 5 questions sur ce que tu as revu. '
+    nr.innerHTML='<div><div class="sl">Rappels matin &amp; soir</div><div class="sd">Matin ~8 h : une notif t’ouvre un quiz de 5 questions sur ce que tu as travaillé. Soir ~19 h, en semaine : un rappel seulement si tu n’as rien fait de la journée ou si tu prends du retard sur le planning. '
       + (state.dailyOn
           ? ('Activé sur cet appareil ('+(state.subs||[]).length+' abonné'+((state.subs||[]).length>1?'s':'')+'). '
              + (syncCode ? 'Pour recevoir la notif aussi sur ton autre appareil : relie-le avec le code <b>'+syncCode+'</b> (carte Synchro), puis active le rappel là-bas.' : ''))
@@ -1515,7 +1549,7 @@
       if(confirm("Remettre toute la progression à zéro ?"+(syncCode?" (aussi sur les appareils synchronisés)":""))){
         var th=state.theme;
         state={ sec:{}, weak:{}, p2:{}, p3:{}, score:{}, open:{}, qcm:{}, qcmAt:{}, theme:th, tab:"planning",
-                subs:state.subs||[], dailyOn:state.dailyOn||false, daily:null, dailyStreak:0, dailyLast:"" };
+                subs:state.subs||[], dailyOn:state.dailyOn||false, daily:null, dailyStreak:0, dailyLast:"", act:{}, eveningLast:"" };
         try{ localStorage.setItem(KEY,JSON.stringify(state)); localStorage.removeItem(SYNC_SEEN_KEY); }catch(e){}
         if(sb&&syncCode){ sb.from(SYNC_TABLE).upsert({ code:syncCode, data:state }).then(function(){ location.reload(); }); }
         else location.reload();

@@ -1,0 +1,32 @@
+name: Rappel BIA du soir
+
+on:
+  schedule:
+    - cron: '0 17 * * 1-5'   # ~19 h Paris (été) / 18 h (hiver), du lundi au vendredi
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Envoyer même hors jour de révision / déjà rappelé"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: evening-nudge
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm i --no-save web-push
+      - run: node scripts/evening-nudge.mjs
+        env:
+          VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
+          FORCE: ${{ (github.event_name == 'workflow_dispatch' && inputs.force) && '1' || '0' }}
