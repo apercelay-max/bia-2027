@@ -206,6 +206,30 @@
   .cal-detail .dl b{color:var(--text)}
 
   /* ---------- Questions tab ---------- */
+  .qmode{display:flex;gap:0;border:1px solid var(--border-strong);border-radius:11px;overflow:hidden;margin-bottom:14px}
+  .qmode button{flex:1;border:0;background:var(--surface);color:var(--muted);font-size:.82rem;font-weight:670;padding:9px 8px;cursor:pointer}
+  .qmode button.on{background:var(--accent);color:var(--accent-ink)}
+  .quiz-lock{padding:22px 18px;text-align:center}
+  .quiz-lock .ico{font-size:1.8rem}
+  .quiz-lock h3{font-size:1.05rem;font-weight:740;margin:8px 0 6px}
+  .quiz-lock p{color:var(--muted);font-size:.88rem;margin-bottom:14px}
+  .quiz-lock button, .quiz-intro button.go{border:0;background:var(--accent);color:var(--accent-ink);font-size:.9rem;font-weight:700;padding:11px 20px;border-radius:11px;cursor:pointer}
+  .quiz-intro{padding:18px 17px}
+  .quiz-intro h3{font-size:1.1rem;font-weight:750;margin-bottom:5px}
+  .quiz-intro p{color:var(--muted);font-size:.86rem;margin-bottom:6px}
+  .quiz-intro .from{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 16px}
+  .quiz-intro .from span{font-size:.74rem;font-weight:650;background:var(--surface-2);border:1px solid var(--border);color:var(--muted);padding:4px 9px;border-radius:99px}
+  .quiz-bar{display:flex;align-items:center;gap:10px;padding:13px 15px}
+  .quiz-bar .qt{font-weight:740;font-size:.96rem}
+  .quiz-bar .qs{margin-left:auto;font-weight:750;font-variant-numeric:tabular-nums;color:var(--muted)}
+  .quiz-result{padding:20px 18px;text-align:center}
+  .quiz-result .big{font-size:2.1rem;font-weight:820}
+  .quiz-result .msg{font-size:.95rem;font-weight:650;margin:4px 0 4px}
+  .quiz-result .sub{color:var(--muted);font-size:.83rem;margin-bottom:16px}
+  .quiz-result .acts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .quiz-result button{border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:.84rem;font-weight:660;padding:9px 16px;border-radius:10px;cursor:pointer}
+  .quiz-result button.primary{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+  .qtag{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:600;padding:0 15px 2px}
   .ep-pills{display:flex;gap:6px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:none}
   .ep-pills::-webkit-scrollbar{display:none}
   .ep-pill{flex:0 0 auto;font-size:.78rem;font-weight:670;padding:8px 12px;border-radius:10px;border:1px solid var(--border-strong);background:var(--surface);color:var(--muted);cursor:pointer;white-space:nowrap}
@@ -435,7 +459,7 @@
 
   /* ================= DATA : QCM (5 épreuves) ================= */
   var QCM = [
-    { id:"meteo", exam:"Épreuve 1", manuel:"Manuel · chapitre 3", nav:"Météo",
+    { id:"meteo", chap:2, exam:"Épreuve 1", manuel:"Manuel · chapitre 3", nav:"Météo",
       title:"Météorologie et aérologie",
       intro:"L’épreuve la plus dense. Elle mélange du par-cœur (atmosphère standard, composition de l’air, nuages, vents) et de la compréhension (fronts, stabilité, point de rosée). Beaucoup de questions partent d’une photo ou d’une carte.",
       fiche:[
@@ -474,7 +498,7 @@
         {q:"Un givrage important sur la cellule d’un avion a notamment pour effet :",o:["un gain d’altitude","une altération des profils aérodynamiques et une perte de portance","une baisse de la traînée","une amélioration des performances"],c:1,w:"La glace déforme le profil, alourdit l’avion et peut bloquer des gouvernes."}
       ]
     },
-    { id:"aero", exam:"Épreuve 2", manuel:"Manuel · chapitre 1", nav:"Aérodynamique",
+    { id:"aero", chap:0, exam:"Épreuve 2", manuel:"Manuel · chapitre 1", nav:"Aérodynamique",
       title:"Aérodynamique, aérostatique et principes du vol",
       intro:"Surtout des définitions précises (portance, traînée, vent relatif, incidence, facteur de charge) et l’équilibre des forces en vol. Quelques calculs simples : portance ∝ vitesse², plané d’un planeur, facteur de charge en virage.",
       fiche:[
@@ -514,7 +538,7 @@
         {q:"L’orbite d’un satellite géostationnaire est :",o:["circulaire, dans le plan de l’équateur","elliptique, dans un plan perpendiculaire à l’équateur","elliptique, avec la Lune comme foyer","circulaire, inclinée à 45°"],c:0,w:"Période de 24 h à environ 36 000 km d’altitude : le satellite reste au-dessus du même point."}
       ]
     },
-    { id:"aeronefs", exam:"Épreuve 3", manuel:"Manuel · chapitre 2", nav:"Aéronefs",
+    { id:"aeronefs", chap:1, exam:"Épreuve 3", manuel:"Manuel · chapitre 2", nav:"Aéronefs",
       title:"Étude des aéronefs et des engins spatiaux",
       intro:"Du vocabulaire technique : classification des aéronefs, pièces de la cellule, gouvernes, trains, moteur à pistons 4 temps, turbomachines, instruments de bord. Souvent une figure à légender.",
       fiche:[
@@ -553,7 +577,7 @@
         {q:"La bille (dans l’indicateur de virage) renseigne le pilote sur :",o:["son altitude","la symétrie de son vol (dérapage ou glissade)","sa vitesse","son cap"],c:1,w:"Bille centrée = vol symétrique."}
       ]
     },
-    { id:"nav", exam:"Épreuve 4", manuel:"Manuel · chapitre 4", nav:"Navigation",
+    { id:"nav", chap:3, exam:"Épreuve 4", manuel:"Manuel · chapitre 4", nav:"Navigation",
       title:"Navigation, réglementation, sécurité des vols",
       intro:"Trois blocs : la navigation (temps, repérage, cap/route, déclinaison, échelle de carte), la réglementation (espaces, règles de l’air, priorités, radio, transpondeur) et les facteurs humains.",
       fiche:[
@@ -595,7 +619,7 @@
         {q:"En VFR, avec une route magnétique de 090°, quel niveau de vol respecte la règle semi-circulaire ?",o:["FL60","FL65","FL70","FL75"],c:3,w:"Route 000→179° : niveau impair + 500 ft (FL35, 55, 75…). Seul FL75 convient ici."}
       ]
     },
-    { id:"histoire", exam:"Épreuve 5", manuel:"Manuel · chapitre 5", nav:"Histoire",
+    { id:"histoire", chap:4, exam:"Épreuve 5", manuel:"Manuel · chapitre 5", nav:"Histoire",
       title:"Histoire et culture de l’aéronautique et du spatial",
       intro:"La plus accessible si on a appris les dates et les noms. Pionniers, deux guerres mondiales, mur du son, aviation commerciale, conquête spatiale, industriels français.",
       fiche:[
@@ -702,11 +726,26 @@
   }
   // index de chapitre PLAN -> id d'épreuve QCM
   var CHAP2EP = { 0:"aero", 1:"aeronefs", 2:"meteo", 3:"nav", 4:"histoire" };
+  // épreuves « débloquées » = chapitres où au moins une section est cochée.
+  // rien coché → tableau vide → pas de quiz.
   function activeEpIds(){
     var seen = {};
     for(var k in state.sec){ if(state.sec[k]) seen[k.split(".")[0]] = 1; }
-    var ids = Object.keys(seen).map(function(ci){ return CHAP2EP[ci]; }).filter(Boolean);
-    return ids.length ? ids : QCM.map(function(p){ return p.id; }); // rien coché → révision générale
+    return Object.keys(seen).map(function(ci){ return CHAP2EP[ci]; }).filter(Boolean);
+  }
+  function workedChapNames(){
+    var seen = {};
+    for(var k in state.sec){ if(state.sec[k]) seen[k.split(".")[0]] = 1; }
+    return Object.keys(seen).map(function(ci){ return PLAN[ci] ? PLAN[ci].title : null; }).filter(Boolean);
+  }
+  // lance un quiz à la demande (indépendant du « rappel du matin »)
+  function launchQuiz(){
+    var qids = pickDailyQuiz();
+    if(!qids.length) return false;
+    state.daily = { date: todayISO(), qids: qids, done:false };
+    state.tab = "dailyquiz";
+    save(); render();
+    return true;
   }
   function qById(qid){
     var pa = qid.split("."), p = QCM.find(function(x){ return x.id===pa[0]; });
@@ -1057,6 +1096,33 @@
     var g=qcmGlobal();
     setBar("Questions", g.justes+" / "+g.faites+" justes");
 
+    // ---- Quiz de révision (sur ce que tu as travaillé) ----
+    var worked = activeEpIds();
+    var quizCard=el("div","card"); quizCard.style.marginBottom="16px";
+    if(dailyPending()){
+      var dn=0; state.daily.qids.forEach(function(x){ if(state.qcm[x]!==undefined && state.qcm[x]!==-1) dn++; });
+      quizCard.style.cssText="margin-bottom:16px;border-color:var(--accent)";
+      quizCard.innerHTML='<div class="quiz-intro"><h3>🎯 Quiz en cours</h3>'+
+        '<p>'+dn+' / '+state.daily.qids.length+' questions faites.</p>'+
+        '<button class="go" data-a="resume">Reprendre</button></div>';
+      quizCard.querySelector('[data-a="resume"]').addEventListener("click",function(){ state.tab="dailyquiz"; save(); render(); });
+    } else if(!worked.length){
+      quizCard.innerHTML='<div class="quiz-lock"><div class="ico">🔒</div>'+
+        '<h3>Le quiz se débloque quand tu travailles</h3>'+
+        '<p>Coche des sections dans le Planning au fil de tes lectures : le quiz te posera des questions uniquement sur ce que tu as vu.</p>'+
+        '<button data-a="goplan">Aller au Planning</button></div>';
+      quizCard.querySelector('[data-a="goplan"]').addEventListener("click",function(){ state.tab="planning"; save(); render(); });
+    } else {
+      var chips=worked.map(function(id){ var p=QCM.find(function(x){return x.id===id;}); return p?p.nav:null; }).filter(Boolean);
+      quizCard.innerHTML='<div class="quiz-intro"><h3>🎯 Quiz de révision</h3>'+
+        '<p>5 questions tirées au hasard de ce que tu as coché dans le Planning. Priorité aux questions jamais faites et à tes erreurs.</p>'+
+        '<div class="from">'+chips.map(function(n){ return '<span>'+n+'</span>'; }).join('')+'</div>'+
+        '<button class="go" data-a="start">Lancer le quiz</button></div>';
+      quizCard.querySelector('[data-a="start"]').addEventListener("click",launchQuiz);
+    }
+    host.appendChild(quizCard);
+    host.appendChild(el("div","sec-title","Réviser par épreuve"));
+
     var pills=el("div","ep-pills");
     QCM.forEach(function(p,i){
       var s=qcmPartStats(p);
@@ -1147,11 +1213,25 @@
   function goBackFromQuiz(){ state.tab = "planning"; save(); render(); }
 
   function renderDailyQuiz(host){
-    setBar("Quiz du jour", null);
+    setBar("Quiz", null);
     if(!state.daily){ ensureDailyQuiz(); }
     var d = state.daily;
     if(!d || !d.qids || !d.qids.length){
-      host.appendChild(el("div","card","<div style='font-size:.9rem'>Pas de quiz aujourd’hui. Active « Rappel du matin » dans les Réglages, ou coche des sections dans le Planning.</div>"));
+      var lock=el("div","card");
+      if(!activeEpIds().length){
+        lock.innerHTML='<div class="quiz-lock"><div class="ico">🔒</div>'+
+          '<h3>Rien à réviser pour l’instant</h3>'+
+          '<p>Le quiz porte sur ce que tu travailles. Lis une section dans le Planning et coche-la, puis reviens ici.</p>'+
+          '<button data-a="goplan">Aller au Planning</button></div>';
+        lock.querySelector('[data-a="goplan"]').addEventListener("click",goBackFromQuiz);
+      } else {
+        lock.innerHTML='<div class="quiz-lock"><div class="ico">🎯</div>'+
+          '<h3>Prêt pour un quiz ?</h3>'+
+          '<p>5 questions sur ce que tu as coché dans le Planning.</p>'+
+          '<button data-a="start">Lancer le quiz</button></div>';
+        lock.querySelector('[data-a="start"]').addEventListener("click",launchQuiz);
+      }
+      host.appendChild(lock);
       var bb=el("button","tool","‹ Retour"); bb.style.marginTop="12px"; bb.addEventListener("click",goBackFromQuiz);
       host.appendChild(bb); return;
     }
@@ -1159,11 +1239,12 @@
     var head=el("div","card"); head.style.marginBottom="14px";
     var done=0; d.qids.forEach(function(qid){ if(state.qcm[qid]!==undefined && state.qcm[qid]!==-1) done++; });
     var finished = done >= d.qids.length;
+    var streakTxt = state.dailyOn ? (' · série '+state.dailyStreak+' '+plur(state.dailyStreak,"jour")) : '';
     head.appendChild(el("div","hero",
       '<div class="big">'+ (finished ? (dailyScore()+" / "+d.qids.length) : (done+" / "+d.qids.length)) +'</div>'+
       '<div class="sub">'+ (finished
-        ? ('Quiz terminé. Série : <b>'+state.dailyStreak+'</b> '+plur(state.dailyStreak,"jour")+'. Reviens demain matin.')
-        : ('5 questions sur ce que tu as revu. Série en cours : '+state.dailyStreak+' '+plur(state.dailyStreak,"jour")) ) +'</div>'));
+        ? ('Quiz terminé — '+dailyScore()+' bonne'+plur(dailyScore(),"","s")+' réponse'+plur(dailyScore(),"","s")+' sur '+d.qids.length+'.'+streakTxt)
+        : ('5 questions sur ce que tu as travaillé.'+streakTxt) ) +'</div>'));
     host.appendChild(head);
 
     var list=el("div","qlist");
@@ -1210,10 +1291,15 @@
     });
     host.appendChild(list);
 
-    var bar=el("div"); bar.style.cssText="display:flex;gap:8px;margin-top:16px";
+    var bar=el("div"); bar.style.cssText="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap";
     var back=el("button","tool", finished ? "Revenir au planning" : "‹ Retour");
     back.addEventListener("click",goBackFromQuiz);
     bar.appendChild(back);
+    if(finished && activeEpIds().length){
+      var again=el("button","tool","🎯 Nouveau quiz");
+      again.addEventListener("click",function(){ state.daily=null; save(); launchQuiz(); });
+      bar.appendChild(again);
+    }
     host.appendChild(bar);
   }
 
@@ -1242,6 +1328,21 @@
       '<div style="margin:8px 0 4px"><span class="delta-pill '+pillCls+'">'+pillTxt+'</span></div>'+
       '<div class="hint">Objectif du jour : '+Math.round(sd.exp)+' / 65 sections lues · tu en es à '+sd.actual+'.</div>';
     host.appendChild(deltaCard);
+
+    // Quiz de révision
+    var qCard=el("div","card"); qCard.style.marginBottom="14px";
+    if(dailyPending()){
+      var dn=0; state.daily.qids.forEach(function(x){ if(state.qcm[x]!==undefined && state.qcm[x]!==-1) dn++; });
+      qCard.style.borderColor="var(--accent)";
+      qCard.innerHTML='<div class="quiz-intro"><h3>🎯 Quiz en cours</h3><p>'+dn+' / '+state.daily.qids.length+' faites.</p><button class="go" data-a="q">Reprendre</button></div>';
+      qCard.querySelector('[data-a="q"]').addEventListener("click",function(){ state.tab="dailyquiz"; save(); render(); });
+    } else if(activeEpIds().length){
+      qCard.innerHTML='<div class="quiz-intro"><h3>🎯 Quiz de révision</h3><p>5 questions sur ce que tu as travaillé (chapitres cochés dans le Planning).</p><button class="go" data-a="q">Lancer le quiz</button></div>';
+      qCard.querySelector('[data-a="q"]').addEventListener("click",launchQuiz);
+    } else {
+      qCard.innerHTML='<div class="quiz-intro"><h3>🎯 Quiz de révision</h3><p style="margin:0">Se débloque dès que tu coches une section dans le Planning.</p></div>';
+    }
+    host.appendChild(qCard);
 
     host.appendChild(el("div","sec-title","Progression"));
     var grid=el("div","statgrid"); grid.style.marginBottom="14px";
