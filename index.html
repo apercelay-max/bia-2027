@@ -131,13 +131,30 @@
     line-height:1.5;-webkit-font-smoothing:antialiased;
     padding-bottom:96px;position:relative;min-height:100vh;
   }
-  /* halo d'accent derrière le contenu : c'est lui qui transparaît à travers le verre */
+  /* halo d'accent derrière le contenu : c'est lui qui transparaît à travers le verre
+     (repris de .screen-ambient de PPL Tracker, un cran plus doux) */
   body::before{
     content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
     background:
-      radial-gradient(58% 45% at 12% -5%, rgba(var(--brand-1-rgb),.16), transparent 70%),
-      radial-gradient(52% 42% at 105% 108%, rgba(var(--brand-2-rgb),.13), transparent 70%);
+      radial-gradient(130% 62% at 8% -8%,  rgba(var(--brand-1-rgb),.30), transparent 62%),
+      radial-gradient(110% 55% at 106% 8%, rgba(var(--brand-2-rgb),.24), transparent 60%),
+      radial-gradient(105% 55% at 45% 112%, rgba(61,90,214,.18), transparent 62%);
   }
+  :root[data-theme="light"] body::before{
+    background:
+      radial-gradient(130% 62% at 8% -8%,  rgba(var(--brand-1-rgb),.18), transparent 62%),
+      radial-gradient(110% 55% at 106% 8%, rgba(var(--brand-2-rgb),.15), transparent 60%),
+      radial-gradient(105% 55% at 45% 112%, rgba(61,90,214,.11), transparent 62%);
+  }
+  @media (prefers-color-scheme:light){
+    :root[data-theme="auto"] body::before{
+      background:
+        radial-gradient(130% 62% at 8% -8%,  rgba(var(--brand-1-rgb),.18), transparent 62%),
+        radial-gradient(110% 55% at 106% 8%, rgba(var(--brand-2-rgb),.15), transparent 60%),
+        radial-gradient(105% 55% at 45% 112%, rgba(61,90,214,.11), transparent 62%);
+    }
+  }
+  :root[data-contrast="high"] body::before{ display:none }
   a{color:var(--accent)}
   button{font-family:var(--font)}
 
@@ -426,6 +443,11 @@
     }
   }
   .tabbar-inner.pressed{transform:scale(.98)}
+  /* distorsion réelle du fond (Chrome/Edge desktop uniquement — voir JS) */
+  .tabbar-inner.refract{
+    -webkit-backdrop-filter:url(#liquidGlassNav) blur(9px) saturate(180%) brightness(1.05);
+    backdrop-filter:url(#liquidGlassNav) blur(9px) saturate(180%) brightness(1.05);
+  }
   .tabbar-inner::before{
     content:"";position:absolute;top:0;left:8%;right:8%;height:46%;pointer-events:none;
     border-radius:50% 50% 60% 60% / 100% 100% 30% 30%;
@@ -435,19 +457,35 @@
     content:"";position:absolute;inset:0;pointer-events:none;opacity:.9;mix-blend-mode:overlay;
     background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,.32),transparent 60%);
   }
-  .tabbar button{
-    position:relative;flex:1;min-width:0;border:0;background:transparent;color:var(--faint);
-    display:flex;flex-direction:column;align-items:center;gap:2px;
-    padding:6px 2px 5px;border-radius:999px;cursor:pointer;
-    font-size:9px;font-weight:550;letter-spacing:.02em;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-    transition:color .15s ease,background .18s ease;
+  /* grain fin par-dessus le verre (turbulence SVG, ~2.5%) */
+  .tabbar-inner .nav-noise{
+    content:"";position:absolute;inset:0;pointer-events:none;opacity:.025;mix-blend-mode:overlay;
+    background-size:120px 120px;
+    background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
-  .tabbar button span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
-  .tabbar button svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .28s cubic-bezier(.34,1.4,.64,1)}
-  .tabbar button.active{color:var(--accent);font-weight:750;background:color-mix(in srgb,var(--brand-1) 13%,transparent)}
-  .tabbar button.active svg{stroke-width:2.3}
-  .tabbar button.bounce svg{transform:scale(.84)}
+  .tabbar button{
+    position:relative;flex:1;min-width:0;border:0;background:transparent;color:var(--muted);
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    padding:5px 2px 4px;border-radius:999px;cursor:pointer;
+    font-size:9px;font-weight:500;letter-spacing:.1px;line-height:1;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    transition:color .15s ease,background .18s ease,box-shadow .18s ease;
+  }
+  .tabbar button .lbl{max-width:100%;overflow:hidden;text-overflow:ellipsis;transition:color .15s ease}
+  .tabbar button .iw{display:flex;align-items:center;justify-content:center;transition:color .15s ease,transform .28s cubic-bezier(.34,1.4,.64,1)}
+  .tabbar button .ic-out,.tabbar button .ic-fill{display:block;line-height:0}
+  .tabbar button svg{width:22px;height:22px;display:block}
+  .tabbar button .ic-fill{display:none}
+  .tabbar button .dot{width:4px;height:4px;border-radius:50%;background:transparent;margin-top:1px;transition:background .15s ease}
+  /* onglet actif : icône pleine + teinte accent + pastille de verre blanc (comme .nav-tab-active de PPL) */
+  .tabbar button.active{color:var(--accent);font-weight:700;background:rgba(255,255,255,0.72);box-shadow:inset 0 1px 0 #fff}
+  .tabbar button.active .ic-out{display:none}
+  .tabbar button.active .ic-fill{display:block}
+  .tabbar button.active .dot{background:var(--accent)}
+  :root[data-theme="dark"] .tabbar button.active{background:rgba(255,255,255,0.16);box-shadow:inset 0 1px 0 rgba(255,255,255,0.24)}
+  @media (prefers-color-scheme:dark){ :root[data-theme="auto"] .tabbar button.active{background:rgba(255,255,255,0.16);box-shadow:inset 0 1px 0 rgba(255,255,255,0.24)} }
+  :root[data-contrast="high"] .tabbar button.active{background:var(--surface-2);box-shadow:none}
+  .tabbar button.bounce .iw{transform:scale(.84)}
   body.noanim .tabbar-inner{transition:none}
   body.noanim .tabbar-inner::after{display:none}
 
@@ -466,6 +504,13 @@
 <main id="view"></main>
 
 <nav class="tabbar" id="tabbar" aria-label="Navigation"></nav>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="liquidGlassNav" x="-20%" y="-20%" width="140%" height="140%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.009 0.02" numOctaves="2" seed="7" result="noise"/>
+    <feGaussianBlur in="noise" stdDeviation="2.5" result="softNoise"/>
+    <feDisplacementMap in="SourceGraphic" in2="softNoise" scale="16" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</defs></svg>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
@@ -1733,22 +1778,47 @@
   }
 
   /* ================= TAB BAR ================= */
+  /* Icônes de la barre : paire trait fin (out) / plein (fill), façon SF Symbols
+     — l'onglet actif passe de l'un à l'autre (repris de PPL Tracker / NavIcons). */
+  var SA='stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"';
   var ICON={
-    planning:'<svg viewBox="0 0 24 24"><path d="M9 3h6a2 2 0 0 1 2 2v0H7v0a2 2 0 0 1 2-2z"/><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M9 12l2 2 4-4"/></svg>',
-    calendrier:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
-    questions:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8v.5"/><circle cx="12" cy="16.5" r=".6" fill="currentColor" stroke="none"/></svg>',
-    dashboard:'<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
-    reglages:'<svg viewBox="0 0 24 24"><path d="M6 8h12M6 8a2 2 0 1 1 0 .01M6 16h12M14 16a2 2 0 1 1 .01 0"/></svg>'
+    planning:{
+      out:'<svg viewBox="0 0 24 24" '+SA+'><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4.2" cy="6" r="1.7"/><circle cx="4.2" cy="12" r="1.7"/><circle cx="4.2" cy="18" r="1.7"/></svg>',
+      fill:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="9" y="5.1" width="12" height="1.9" rx=".95"/><rect x="9" y="11.1" width="12" height="1.9" rx=".95"/><rect x="9" y="17" width="12" height="1.9" rx=".95"/><circle cx="4" cy="6.1" r="2.1"/><circle cx="4" cy="12" r="2.1"/><circle cx="4" cy="17.9" r="2.1"/></svg>'
+    },
+    calendrier:{
+      out:'<svg viewBox="0 0 24 24" '+SA+'><rect x="4" y="5.5" width="16" height="14" rx="2.2"/><line x1="4" y1="9.5" x2="20" y2="9.5"/><line x1="8" y1="3.3" x2="8" y2="6.3"/><line x1="16" y1="3.3" x2="16" y2="6.3"/></svg>',
+      fill:'<svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" d="M4 7.7a2.2 2.2 0 012.2-2.2h11.6A2.2 2.2 0 0120 7.7v11.6A2.2 2.2 0 0117.8 21.5H6.2A2.2 2.2 0 014 19.3V7.7zm3.2-4.4a1 1 0 00-1 1v2a1 1 0 002 0v-2a1 1 0 00-1-1zm10.6 0a1 1 0 00-1 1v2a1 1 0 002 0v-2a1 1 0 00-1-1zM4 9.5h16v1.8H4V9.5z"/></svg>'
+    },
+    questions:{
+      out:'<svg viewBox="0 0 24 24" '+SA+'><circle cx="12" cy="12" r="8.5"/><path d="M9.3 9.2a2.8 2.8 0 1 1 3.5 3.1c-.7.3-1.1.9-1.1 1.6v.4"/><circle cx="11.7" cy="17" r=".7" fill="currentColor" stroke="none"/></svg>',
+      fill:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6" fill="currentColor" fill-opacity="0.2"/><g stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"><circle cx="12" cy="12" r="8.5"/><path d="M9.3 9.2a2.8 2.8 0 1 1 3.5 3.1c-.7.3-1.1.9-1.1 1.6v.4"/></g><circle cx="11.7" cy="17" r="1.1" fill="currentColor"/></svg>'
+    },
+    dashboard:{
+      out:'<svg viewBox="0 0 24 24" '+SA+'><line x1="4" y1="20" x2="20" y2="20"/><rect x="6" y="13" width="3" height="7"/><rect x="10.5" y="9" width="3" height="11"/><rect x="15" y="5" width="3" height="15"/></svg>',
+      fill:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="19" width="16" height="1.7" rx=".85"/><rect x="6" y="13" width="3" height="6.4" rx=".6"/><rect x="10.5" y="9" width="3" height="10.4" rx=".6"/><rect x="15" y="5" width="3" height="14.4" rx=".6"/></svg>'
+    },
+    reglages:{
+      out:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6.5" x2="20" y2="6.5"/><circle cx="9.5" cy="6.5" r="2" fill="currentColor"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2" fill="currentColor"/><line x1="4" y1="17.5" x2="20" y2="17.5"/><circle cx="7.5" cy="17.5" r="2" fill="currentColor"/></svg>',
+      fill:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6.5" x2="20" y2="6.5"/><circle cx="9.5" cy="6.5" r="2.5" fill="currentColor"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2.5" fill="currentColor"/><line x1="4" y1="17.5" x2="20" y2="17.5"/><circle cx="7.5" cy="17.5" r="2.5" fill="currentColor"/></svg>'
+    }
   };
   var TABS=[["planning","Planning"],["calendrier","Calendrier"],["questions","Questions"],["dashboard","Dashboard"],["reglages","Réglages"]];
-  var tabbarWired=false;
   function renderTabbar(){
     var tb=document.getElementById("tabbar");
     tb.innerHTML="";
     var inner=el("div","tabbar-inner");
+    // distorsion SVG : seuls Chrome/Edge desktop l'appliquent (Safari + iOS l'ignorent)
+    var ua=navigator.userAgent;
+    if(/Chrome|Chromium|Edg\//.test(ua) && !/iPhone|iPad|iPod/.test(ua) && !/Android/.test(ua)) inner.classList.add("refract");
+    inner.appendChild(el("div","nav-noise"));
     TABS.forEach(function(t){
-      var b=el("button",state.tab===t[0]?"active":null, ICON[t[0]]+"<span>"+t[1]+"</span>");
+      var ic=ICON[t[0]];
+      var b=el("button",state.tab===t[0]?"active":null,
+        '<span class="iw"><span class="ic-out">'+ic.out+'</span><span class="ic-fill">'+ic.fill+'</span></span>'+
+        '<span class="lbl">'+t[1]+'</span><span class="dot"></span>');
       b.setAttribute("aria-label",t[1]);
+      if(state.tab===t[0]) b.setAttribute("aria-current","page");
       b.addEventListener("click",function(){
         b.classList.add("bounce"); setTimeout(function(){ b.classList.remove("bounce"); },260);
         if(state.tab!==t[0]){ state.tab=t[0]; save(); render(); }

@@ -1,6 +1,6 @@
 /* BIA 2027 — service worker
    App-shell offline + notifications push. Bump CACHE quand index.html change. */
-const CACHE = 'bia-2027-v6';
+const CACHE = 'bia-2027-v7';
 const SHELL = [
   './',
   './index.html',
